@@ -833,6 +833,27 @@
       white-space: nowrap;
     }
 
+    .route-file-line {
+      grid-template-columns: minmax(0, 1fr) auto;
+    }
+
+    .file-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .file-button {
+      min-height: 44px;
+      padding: 0 12px;
+    }
+
+    .route-clear-button {
+      width: 44px;
+      height: 44px;
+      box-shadow: none;
+    }
+
     .list-head {
       margin: 18px 0 10px;
       display: flex;
@@ -2115,6 +2136,92 @@
       background: rgba(255, 255, 255, 0.22);
     }
 
+    .share-sheet[hidden] {
+      display: none;
+    }
+
+    .share-sheet {
+      position: fixed;
+      inset: 0;
+      z-index: 30;
+      display: grid;
+      place-items: center;
+      padding: 18px;
+    }
+
+    .share-backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.42);
+      backdrop-filter: blur(6px);
+    }
+
+    .share-panel {
+      position: relative;
+      z-index: 1;
+      width: min(100%, 420px);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: var(--panel);
+      color: var(--ink);
+      box-shadow: 0 28px 80px rgba(17, 24, 39, 0.26);
+      padding: 16px;
+      animation: share-panel-enter 220ms cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+
+    .share-panel-head,
+    .share-panel-actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .share-panel-head span {
+      display: block;
+      color: var(--track);
+      font-size: 0.68rem;
+      font-weight: 1000;
+      line-height: 1;
+      text-transform: uppercase;
+    }
+
+    .share-panel-head strong {
+      display: block;
+      margin-top: 4px;
+      font-size: 1.1rem;
+      font-weight: 1000;
+    }
+
+    .share-options {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .share-option {
+      display: grid;
+      gap: 6px;
+    }
+
+    .share-option span,
+    .share-hint {
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 900;
+    }
+
+    .share-hint {
+      margin: 12px 0 0;
+      line-height: 1.5;
+    }
+
+    .share-panel-actions {
+      justify-content: flex-end;
+      margin-top: 16px;
+    }
+
     html[data-theme="dark"] {
       --bg: #000000;
       --panel: #000000;
@@ -2156,6 +2263,8 @@
     html[data-theme="dark"] .heart-value,
     html[data-theme="dark"] .detail-metric,
     html[data-theme="dark"] .weather-row,
+    html[data-theme="dark"] .file-name,
+    html[data-theme="dark"] .share-panel,
     html[data-theme="dark"] .icon-button,
     html[data-theme="dark"] .action-button,
     html[data-theme="dark"] input,
@@ -2184,6 +2293,10 @@
     html[data-theme="dark"] .achievement-mark {
       background: #000000;
       border-color: var(--line);
+    }
+
+    html[data-theme="dark"] .share-backdrop {
+      background: rgba(0, 0, 0, 0.72);
     }
 
     html[data-theme="dark"] .calendar-day.has-run {
@@ -2417,6 +2530,21 @@
         grid-template-columns: minmax(0, 1fr) 74px;
       }
 
+      .share-sheet {
+        align-items: end;
+        place-items: end center;
+        padding: 10px;
+      }
+
+      .share-panel {
+        width: 100%;
+        border-radius: 18px 18px 12px 12px;
+      }
+
+      .share-options {
+        grid-template-columns: 1fr;
+      }
+
       .record-distance-line {
         grid-template-columns: minmax(0, 1fr) 78px;
       }
@@ -2460,6 +2588,17 @@
       to {
         opacity: 0;
         transform: translateY(-8px) scale(0.992);
+      }
+    }
+
+    @keyframes share-panel-enter {
+      from {
+        opacity: 0;
+        transform: translate3d(0, 12px, 0) scale(0.98);
+      }
+      to {
+        opacity: 1;
+        transform: translate3d(0, 0, 0) scale(1);
       }
     }
 
@@ -2931,6 +3070,27 @@
                 <label for="recordNotes">備註</label>
                 <textarea id="recordNotes"></textarea>
               </section>
+
+              <section class="field wide">
+                <label for="recordGpxInput">GPX 足跡（可選）</label>
+                <div class="file-line route-file-line">
+                  <div class="file-name" id="recordGpxName">尚未上傳 GPX</div>
+                  <div class="file-actions">
+                    <label class="action-button secondary file-button" for="recordGpxInput">
+                      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <path d="M12 4v10m0-10 4 4m-4-4-4 4M5 14v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                      </svg>
+                      GPX
+                    </label>
+                    <button type="button" class="icon-button route-clear-button" id="recordGpxClear" aria-label="清除 GPX" title="清除 GPX">
+                      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+                      </svg>
+                    </button>
+                  </div>
+                  <input id="recordGpxInput" type="file" accept=".gpx,application/gpx+xml,application/xml,text/xml" hidden>
+                </div>
+              </section>
             </div>
 
             <div class="actions-row">
@@ -3126,6 +3286,50 @@
     </section>
   </main>
 
+  <div class="share-sheet" id="shareSheet" hidden>
+    <div class="share-backdrop" data-share-close></div>
+    <section class="share-panel" role="dialog" aria-modal="true" aria-labelledby="shareSheetTitle">
+      <div class="share-panel-head">
+        <div>
+          <span>Share</span>
+          <strong id="shareSheetTitle">分享圖片</strong>
+        </div>
+        <button type="button" class="icon-button" id="shareCloseButton" aria-label="關閉分享選單" title="關閉">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+          </svg>
+        </button>
+      </div>
+      <div class="share-options">
+        <label class="share-option" for="shareTheme">
+          <span>色彩</span>
+          <select id="shareTheme">
+            <option value="dark">深色運動風</option>
+            <option value="light">淺色簡潔</option>
+          </select>
+        </label>
+        <label class="share-option" for="shareFormat">
+          <span>比例</span>
+          <select id="shareFormat">
+            <option value="portrait">3:4 直式</option>
+            <option value="square">1:1 正方形</option>
+            <option value="story">9:16 直式</option>
+          </select>
+        </label>
+      </div>
+      <p class="share-hint">GPX 足跡有上傳時會自動畫進分享圖；備註不會放進圖片。</p>
+      <div class="share-panel-actions">
+        <button type="button" class="action-button secondary" id="shareCancelButton">取消</button>
+        <button type="button" class="action-button primary" id="shareGenerateButton">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M8 12h8M12 8l4 4-4 4" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          產生圖片
+        </button>
+      </div>
+    </section>
+  </div>
+
   <div class="toast" id="toast" role="status">已完成</div>
 
   <script>
@@ -3164,6 +3368,12 @@
       age: "",
       goal: "本月 50 km"
     };
+    const SHARE_FORMATS = {
+      portrait: { label: "3:4 直式", width: 1080, height: 1440 },
+      square: { label: "1:1 正方形", width: 1080, height: 1080 },
+      story: { label: "9:16 直式", width: 1080, height: 1920 }
+    };
+    const ROUTE_POINT_LIMIT = 500;
 
     const presetDistances = [
       { key: "one", labelKm: "1K", labelMi: "1 mi", km: 1, mi: 1 },
@@ -3187,6 +3397,8 @@
     let pendingCalendarMotion = "";
     let activeAchievementCategory = "distance";
     let pendingAchievementUnlocks = [];
+    let currentRouteData = null;
+    let activeShareRecordId = null;
     const motionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
 
     const $ = (selector) => document.querySelector(selector);
@@ -3263,6 +3475,9 @@
       recordWindSpeed: $("#recordWindSpeed"),
       recordWindDirection: $("#recordWindDirection"),
       recordNotes: $("#recordNotes"),
+      recordGpxInput: $("#recordGpxInput"),
+      recordGpxName: $("#recordGpxName"),
+      recordGpxClear: $("#recordGpxClear"),
       saveRecordButton: $("#saveRecordButton"),
       backupButton: $("#backupButton"),
       importInput: $("#importInput"),
@@ -3288,6 +3503,12 @@
       calendarNext: $("#calendarNext"),
       recordCount: $("#recordCount"),
       recordList: $("#recordList"),
+      shareSheet: $("#shareSheet"),
+      shareTheme: $("#shareTheme"),
+      shareFormat: $("#shareFormat"),
+      shareCloseButton: $("#shareCloseButton"),
+      shareCancelButton: $("#shareCancelButton"),
+      shareGenerateButton: $("#shareGenerateButton"),
       toast: $("#toast")
     };
 
@@ -3380,9 +3601,18 @@
     });
     els.recordForm.addEventListener("submit", saveRecordFromForm);
     els.newRecordButton.addEventListener("click", resetRecordForm);
+    els.recordGpxInput.addEventListener("change", handleGpxUpload);
+    els.recordGpxClear.addEventListener("click", () => setCurrentRouteData(null));
     els.backupButton.addEventListener("click", exportBackup);
     els.importInput.addEventListener("change", importBackup);
     els.exportButton.addEventListener("click", exportCsv);
+    els.shareGenerateButton.addEventListener("click", generateSelectedShareImage);
+    els.shareCloseButton.addEventListener("click", closeShareSheet);
+    els.shareCancelButton.addEventListener("click", closeShareSheet);
+    els.shareSheet.querySelector("[data-share-close]").addEventListener("click", closeShareSheet);
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && !els.shareSheet.hidden) closeShareSheet();
+    });
     els.collapseToggles.forEach((button) => {
       button.addEventListener("click", () => toggleDashboardPanel(button.dataset.collapseToggle));
     });
@@ -4040,6 +4270,95 @@
       showToast("已帶入計算結果");
     }
 
+    async function handleGpxUpload(event) {
+      const file = event.target.files?.[0];
+      event.target.value = "";
+      if (!file) return;
+
+      try {
+        const route = parseGpxRoute(await file.text(), file.name);
+        setCurrentRouteData(route);
+        showToast("已讀取 GPX 路線");
+      } catch (error) {
+        console.error(error);
+        setCurrentRouteData(null);
+        showToast("GPX 沒讀到路線");
+      }
+    }
+
+    function parseGpxRoute(text, fileName = "route.gpx") {
+      const xml = new DOMParser().parseFromString(text, "application/xml");
+      if (xml.querySelector("parsererror")) throw new Error("Invalid GPX");
+      let nodes = [...xml.querySelectorAll("trkpt")];
+      if (!nodes.length) nodes = [...xml.querySelectorAll("rtept")];
+      if (!nodes.length) nodes = [...xml.querySelectorAll("wpt")];
+      const points = nodes
+        .map((node) => ({
+          lat: Number.parseFloat(node.getAttribute("lat")),
+          lon: Number.parseFloat(node.getAttribute("lon"))
+        }))
+        .filter((point) => Number.isFinite(point.lat) && Number.isFinite(point.lon));
+
+      if (points.length < 2) throw new Error("No route points");
+      return buildRouteData(fileName, points);
+    }
+
+    function buildRouteData(fileName, points) {
+      const simplified = simplifyRoutePoints(points, ROUTE_POINT_LIMIT)
+        .map((point) => ({
+          lat: roundDecimal(point.lat, 6),
+          lon: roundDecimal(point.lon, 6)
+        }));
+      return {
+        type: "gpx",
+        name: safeFilenamePart(fileName || "route.gpx"),
+        originalPoints: points.length,
+        points: simplified,
+        bounds: routeBounds(simplified)
+      };
+    }
+
+    function simplifyRoutePoints(points, maxPoints = ROUTE_POINT_LIMIT) {
+      if (points.length <= maxPoints) return points;
+      const result = [points[0]];
+      const step = (points.length - 1) / (maxPoints - 1);
+      for (let i = 1; i < maxPoints - 1; i += 1) {
+        result.push(points[Math.round(i * step)]);
+      }
+      result.push(points[points.length - 1]);
+      return result;
+    }
+
+    function routeBounds(points) {
+      return points.reduce((bounds, point) => ({
+        minLat: Math.min(bounds.minLat, point.lat),
+        maxLat: Math.max(bounds.maxLat, point.lat),
+        minLon: Math.min(bounds.minLon, point.lon),
+        maxLon: Math.max(bounds.maxLon, point.lon)
+      }), {
+        minLat: Infinity,
+        maxLat: -Infinity,
+        minLon: Infinity,
+        maxLon: -Infinity
+      });
+    }
+
+    function setCurrentRouteData(route) {
+      currentRouteData = route ? cloneRouteData(route) : null;
+      updateRouteFileName();
+    }
+
+    function cloneRouteData(route) {
+      return route ? JSON.parse(JSON.stringify(route)) : null;
+    }
+
+    function updateRouteFileName() {
+      if (!els.recordGpxName) return;
+      els.recordGpxName.textContent = currentRouteData
+        ? `${currentRouteData.name || "GPX 路線"} · 已加入路線`
+        : "尚未上傳 GPX";
+    }
+
     function resetRecordForm() {
       editingRecordId = null;
       els.recordForm.reset();
@@ -4047,6 +4366,7 @@
       els.recordTitle.value = "跑步";
       els.recordSurface.value = "outdoor";
       els.recordUnit.value = calcState.unit;
+      setCurrentRouteData(null);
       els.recordFormTitle.textContent = "新增紀錄";
       els.saveRecordButton.lastChild.textContent = " 儲存紀錄";
     }
@@ -4102,6 +4422,7 @@
           windSpeed: optionalNumber(els.recordWindSpeed.value),
           windDirection: els.recordWindDirection.value.trim()
         },
+        route: currentRouteData ? cloneRouteData(currentRouteData) : null,
         notes: els.recordNotes.value.trim(),
         createdAt: editingRecordId ? (records.find((item) => item.id === editingRecordId)?.createdAt || new Date().toISOString()) : new Date().toISOString(),
         updatedAt: new Date().toISOString()
@@ -5770,18 +6091,35 @@
       return Number(value.toFixed(2)).toString();
     }
 
-    async function shareRecordImage(id) {
-      const record = records.find((item) => item.id === id);
+    function shareRecordImage(id) {
+      if (!records.some((item) => item.id === id)) return;
+      activeShareRecordId = id;
+      els.shareSheet.hidden = false;
+      requestAnimationFrame(() => els.shareGenerateButton.focus());
+    }
+
+    function closeShareSheet() {
+      activeShareRecordId = null;
+      els.shareSheet.hidden = true;
+    }
+
+    async function generateSelectedShareImage() {
+      const record = records.find((item) => item.id === activeShareRecordId);
       if (!record) return;
+      const options = {
+        theme: els.shareTheme.value === "light" ? "light" : "dark",
+        format: SHARE_FORMATS[els.shareFormat.value] ? els.shareFormat.value : "portrait"
+      };
 
       try {
         showToast("正在產生分享圖", { duration: 900 });
-        const blob = await createRecordShareBlob(record);
-        const filename = `燃速誌-${record.date || todayIso()}-${safeFilenamePart(record.title)}.png`;
+        const blob = await createRecordShareBlob(record, options);
+        const filename = `燃速誌-${record.date || todayIso()}-${options.theme}-${options.format}-${safeFilenamePart(record.title)}.png`;
         const file = typeof File === "function"
           ? new File([blob], filename, { type: "image/png" })
           : null;
 
+        closeShareSheet();
         if (file && navigator.canShare?.({ files: [file] })) {
           try {
             await navigator.share({
@@ -5807,148 +6145,377 @@
       }
     }
 
-    async function createRecordShareBlob(record) {
+    async function createRecordShareBlob(record, options = {}) {
+      const format = SHARE_FORMATS[options.format] || SHARE_FORMATS.portrait;
+      const palette = sharePalette(options.theme);
       const canvas = document.createElement("canvas");
-      canvas.width = 1080;
-      canvas.height = 1350;
+      canvas.width = format.width;
+      canvas.height = format.height;
       const ctx = canvas.getContext("2d");
-      const width = canvas.width;
-      const height = canvas.height;
-      const averagePace = getAveragePaceSeconds(record);
-      const avgHeartRate = getAverageHeartRate(record);
-      const maxHeartRate = getMaxHeartRate(record);
-      const zones = normalizedZones(record.heartRateZones);
-      const hasZones = zones.some((value) => value !== "" && value != null);
-      const monthKm = recordMonthKm(record);
-      const title = String(record.title || "跑步").trim();
+      const box = shareCanvasBox(canvas.width, canvas.height);
 
+      drawShareBackground(ctx, canvas.width, canvas.height, palette);
+      fillCanvasRoundRect(ctx, box.cardX, box.cardY, box.cardW, box.cardH, box.radius, palette.card);
+      const stripe = ctx.createLinearGradient(box.cardX, box.cardY, box.cardX + box.cardW, box.cardY);
+      stripe.addColorStop(0, palette.red);
+      stripe.addColorStop(0.6, palette.accent);
+      stripe.addColorStop(1, palette.yellow);
+      fillCanvasRoundRect(ctx, box.cardX, box.cardY, box.cardW, Math.max(10, box.scale * 15), Math.max(6, box.scale * 8), stripe);
+
+      if (canvas.width > canvas.height) {
+        drawLandscapeShare(ctx, record, box, palette);
+      } else {
+        drawPortraitShare(ctx, record, box, palette);
+      }
+      return canvasToBlob(canvas);
+    }
+
+    function shareCanvasBox(width, height) {
+      const minSide = Math.min(width, height);
+      const margin = Math.round(minSide * 0.055);
+      return {
+        width,
+        height,
+        scale: minSide / 1080,
+        margin,
+        cardX: margin,
+        cardY: margin,
+        cardW: width - margin * 2,
+        cardH: height - margin * 2,
+        radius: Math.round(minSide * 0.04)
+      };
+    }
+
+    function sharePalette(theme) {
+      const dark = theme !== "light";
+      return dark ? {
+        bg0: "#030712",
+        bg1: "#000000",
+        card: "#080808",
+        text: "#F9FAFB",
+        muted: "#A1A1AA",
+        line: "#27272A",
+        soft: "#171717",
+        metric: "#111111",
+        accent: "#F97316",
+        red: "#EF4444",
+        yellow: "#FACC15",
+        routeBg: "#0F0F0F",
+        routeLine: "#F97316",
+        routeSoft: "rgba(249, 115, 22, 0.14)"
+      } : {
+        bg0: "#F5F7FA",
+        bg1: "#FFF7ED",
+        card: "#FFFDF8",
+        text: "#0F172A",
+        muted: "#6B7280",
+        line: "#E5E7EB",
+        soft: "#FFF7ED",
+        metric: "#FFFFFF",
+        accent: "#F97316",
+        red: "#EF4444",
+        yellow: "#FACC15",
+        routeBg: "#F8FAFC",
+        routeLine: "#F97316",
+        routeSoft: "rgba(249, 115, 22, 0.16)"
+      };
+    }
+
+    function drawShareBackground(ctx, width, height, palette) {
       const bg = ctx.createLinearGradient(0, 0, width, height);
-      bg.addColorStop(0, "#111827");
-      bg.addColorStop(0.56, "#000000");
-      bg.addColorStop(1, "#18181B");
+      bg.addColorStop(0, palette.bg0);
+      bg.addColorStop(0.58, palette.bg1);
+      bg.addColorStop(1, palette.bg0);
       ctx.fillStyle = bg;
       ctx.fillRect(0, 0, width, height);
 
       ctx.save();
-      ctx.globalAlpha = 0.9;
-      const glow = ctx.createRadialGradient(900, 120, 40, 900, 120, 330);
-      glow.addColorStop(0, "#FACC15");
-      glow.addColorStop(0.42, "#F97316");
+      ctx.globalAlpha = 0.72;
+      const glow = ctx.createRadialGradient(width * 0.84, height * 0.08, width * 0.02, width * 0.84, height * 0.08, width * 0.26);
+      glow.addColorStop(0, palette.yellow);
+      glow.addColorStop(0.42, palette.accent);
       glow.addColorStop(1, "rgba(249, 115, 22, 0)");
       ctx.fillStyle = glow;
       ctx.beginPath();
-      ctx.arc(900, 120, 330, 0, Math.PI * 2);
+      ctx.arc(width * 0.84, height * 0.08, width * 0.26, 0, Math.PI * 2);
       ctx.fill();
       ctx.restore();
+    }
 
-      fillCanvasRoundRect(ctx, 58, 72, 964, 1240, 42, "#fffdf8");
-      const stripe = ctx.createLinearGradient(70, 72, 1010, 72);
-      stripe.addColorStop(0, "#EF4444");
-      stripe.addColorStop(0.58, "#F97316");
-      stripe.addColorStop(1, "#FACC15");
-      fillCanvasRoundRect(ctx, 58, 72, 964, 16, 8, stripe);
+    function drawPortraitShare(ctx, record, box, palette) {
+      const { scale: s, cardX, cardY, cardW, cardH } = box;
+      const x = cardX + 42 * s;
+      const w = cardW - 84 * s;
+      const compact = box.height <= 1120;
+      const footerY = cardY + cardH - (compact ? 22 : 48) * s;
+      const route = record.route?.points?.length ? record.route : null;
+      const zones = normalizedZones(record.heartRateZones);
+      const hasZones = zones.some((value) => value !== "" && value != null);
 
-      drawCanvasText(ctx, "燃速誌", 100, 155, 46, 1000, "#111827");
-      drawCanvasText(ctx, "RUN SUMMARY", 100, 194, 22, 900, "#F97316");
-      ctx.textAlign = "right";
-      drawCanvasText(ctx, `${record.date || "--"}${formatSurface(record.surface) ? ` · ${formatSurface(record.surface)}` : ""}`, 980, 156, 28, 900, "#6B7280");
-      ctx.textAlign = "left";
+      drawShareHeader(ctx, record, x, cardY + 74 * s, w, s, palette);
+      let y = cardY + (compact ? 172 : 208) * s;
+      const routeGap = route ? 28 * s : 0;
+      const routeW = route ? Math.min(w * 0.43, 360 * s) : 0;
+      const leftW = route ? w - routeW - routeGap : w;
+      const routeX = x + leftW + routeGap;
+      const routeY = cardY + (compact ? 172 : 202) * s;
+      const routeH = route ? (compact ? 244 * s : Math.min(310 * s, cardH * 0.24)) : 0;
 
-      let titleY = drawCanvasWrappedText(ctx, title, 100, 284, 840, 42, 2, {
-        fontSize: 40,
+      y = drawCanvasWrappedText(ctx, record.title || "跑步", x, y, leftW, 40 * s, 2, {
+        fontSize: 39 * s,
         weight: 1000,
-        color: "#111827"
+        color: palette.text
+      }) + (compact ? 38 : 50) * s;
+      y = drawShareDistance(ctx, record, x, y, leftW, s, palette) + (compact ? 42 : 60) * s;
+
+      if (route) {
+        drawShareRoutePanel(ctx, routeX, routeY, routeW, routeH, route, palette, s);
+        y = Math.max(y, routeY + routeH + (compact ? 28 : 34) * s);
+      }
+
+      const bigGap = compact ? 22 * s : 36 * s;
+      const bigW = (w - bigGap) / 2;
+      const bigH = compact ? 104 * s : 132 * s;
+      drawShareMetric(ctx, x, y, bigW, bigH, "時間", formatDuration(record.durationSeconds || 0), palette, s);
+      drawShareMetric(ctx, x + bigW + bigGap, y, bigW, bigH, "平均配速", `${formatPace(getAveragePaceSeconds(record))} /${record.unit || "km"}`, palette, s);
+      y += bigH + (compact ? 20 : 34) * s;
+
+      const metricItems = shareMetricItems(record).slice(0, compact ? 2 : 6);
+      const columns = compact ? 2 : 3;
+      const gap = compact ? 16 * s : 22 * s;
+      const smallW = (w - gap * (columns - 1)) / columns;
+      const smallH = compact ? 62 * s : 78 * s;
+      const smallStep = compact ? 76 * s : 96 * s;
+      metricItems.forEach(([label, value], index) => {
+        const row = Math.floor(index / columns);
+        const col = index % columns;
+        drawShareSmallMetric(ctx, x + col * (smallW + gap), y + row * smallStep, smallW, smallH, label, value, palette, s);
       });
-      titleY = Math.max(titleY + 34, 320);
+      y += Math.ceil(metricItems.length / columns) * smallStep + (compact ? 8 : 20) * s;
 
+      if (hasZones) {
+        drawCanvasText(ctx, "心率區間", x, y + 24 * s, compact ? 24 * s : 28 * s, 1000, palette.text);
+        drawShareZoneBars(ctx, x, y + (compact ? 36 : 42) * s, w, compact ? 108 * s : 130 * s, zones, palette, s);
+        y += (compact ? 142 : 178) * s;
+      }
+
+      const weatherItems = shareWeatherItems(record.weather).slice(0, 4);
+      if (weatherItems.length && y + 80 * s < footerY - 34 * s) {
+        drawCanvasText(ctx, "天氣", x, y + 24 * s, compact ? 24 * s : 28 * s, 1000, palette.text);
+        drawShareWeather(ctx, x, y + 52 * s, w, weatherItems, palette, s);
+      }
+
+      drawShareFooter(ctx, x, footerY, w, palette, s);
+    }
+
+    function drawLandscapeShare(ctx, record, box, palette) {
+      const { scale: s, cardX, cardY, cardW, cardH } = box;
+      const x = cardX + 48 * s;
+      const top = cardY + 78 * s;
+      const footerY = cardY + cardH - 46 * s;
+      const gap = 40 * s;
+      const route = record.route?.points?.length ? record.route : null;
+      const rightW = route ? Math.max(cardW * 0.36, 430 * s) : 0;
+      const leftW = cardW - 96 * s - rightW - (route ? gap : 0);
+      const zones = normalizedZones(record.heartRateZones);
+      const hasZones = zones.some((value) => value !== "" && value != null);
+
+      drawShareHeader(ctx, record, x, top, leftW, s, palette);
+      let y = top + 120 * s;
+      y = drawCanvasWrappedText(ctx, record.title || "跑步", x, y, leftW, 44 * s, 2, {
+        fontSize: 42 * s,
+        weight: 1000,
+        color: palette.text
+      }) + 48 * s;
+      y = drawShareDistance(ctx, record, x, y, leftW, s, palette) + 52 * s;
+
+      const bigW = (leftW - 28 * s) / 2;
+      drawShareMetric(ctx, x, y, bigW, 126 * s, "時間", formatDuration(record.durationSeconds || 0), palette, s);
+      drawShareMetric(ctx, x + bigW + 28 * s, y, bigW, 126 * s, "平均配速", `${formatPace(getAveragePaceSeconds(record))} /${record.unit || "km"}`, palette, s);
+      y += 156 * s;
+
+      const smallItems = shareMetricItems(record).slice(0, 6);
+      const smallW = (leftW - 32 * s) / 3;
+      smallItems.forEach(([label, value], index) => {
+        const row = Math.floor(index / 3);
+        const col = index % 3;
+        drawShareSmallMetric(ctx, x + col * (smallW + 16 * s), y + row * 86 * s, smallW, 70 * s, label, value, palette, s);
+      });
+      y += Math.ceil(smallItems.length / 3) * 86 * s + 18 * s;
+
+      if (hasZones) {
+        drawCanvasText(ctx, "心率區間", x, y + 22 * s, 26 * s, 1000, palette.text);
+        drawShareZoneBars(ctx, x, y + 36 * s, leftW, 112 * s, zones, palette, s);
+      }
+
+      const weatherItems = shareWeatherItems(record.weather).slice(0, 4);
+      if (weatherItems.length) {
+        drawShareWeather(ctx, x, footerY - 102 * s, leftW, weatherItems, palette, s);
+      }
+
+      if (route) {
+        drawShareRoutePanel(ctx, x + leftW + gap, top + 16 * s, rightW, footerY - top - 96 * s, route, palette, s);
+      }
+      drawShareFooter(ctx, x, footerY, cardW - 96 * s, palette, s);
+    }
+
+    function drawShareHeader(ctx, record, x, y, width, scale, palette) {
+      drawCanvasText(ctx, "燃速誌", x, y, 45 * scale, 1000, palette.text);
+      drawCanvasText(ctx, "RUN SUMMARY", x, y + 40 * scale, 21 * scale, 900, palette.accent);
+      ctx.textAlign = "right";
+      drawCanvasText(ctx, `${record.date || "--"}${formatSurface(record.surface) ? ` · ${formatSurface(record.surface)}` : ""}`, x + width, y + 2 * scale, 27 * scale, 900, palette.muted);
+      ctx.textAlign = "left";
+    }
+
+    function drawShareDistance(ctx, record, x, y, width, scale, palette) {
       const distanceValue = formatDistance(record.distance || 0);
-      const distanceSize = fitCanvasFont(ctx, distanceValue, 560, 158, 92, 1000);
-      drawCanvasText(ctx, distanceValue, 100, titleY + 130, distanceSize, 1000, "#0F172A");
+      const distanceSize = fitCanvasFont(ctx, distanceValue, width * 0.62, 148 * scale, 82 * scale, 1000);
+      drawCanvasText(ctx, distanceValue, x, y + distanceSize, distanceSize, 1000, palette.text);
       const distanceWidth = ctx.measureText(distanceValue).width;
-      drawCanvasText(ctx, record.unit || "km", 112 + distanceWidth, titleY + 116, 48, 1000, "#111827");
-      fillCanvasRoundRect(ctx, 100, titleY + 154, Math.min(390, distanceWidth + 98), 9, 6, "#F97316");
+      drawCanvasText(ctx, record.unit || "km", x + distanceWidth + 12 * scale, y + distanceSize - 16 * scale, 46 * scale, 1000, palette.text);
+      fillCanvasRoundRect(ctx, x, y + distanceSize + 22 * scale, Math.min(width * 0.44, distanceWidth + 98 * scale), 9 * scale, 5 * scale, palette.accent);
+      return y + distanceSize + 34 * scale;
+    }
 
-      const statsY = titleY + 215;
-      drawShareMetric(ctx, 100, statsY, 420, 140, "時間", formatDuration(record.durationSeconds || 0));
-      drawShareMetric(ctx, 560, statsY, 420, 140, "平均配速", `${formatPace(averagePace)} /${record.unit || "km"}`);
+    function drawShareMetric(ctx, x, y, width, height, label, value, palette, scale) {
+      fillCanvasRoundRect(ctx, x, y, width, height, 22 * scale, palette.soft);
+      fillCanvasRoundRect(ctx, x, y, 7 * scale, height, 4 * scale, palette.accent);
+      drawCanvasText(ctx, label, x + 28 * scale, y + height * 0.34, 23 * scale, 900, palette.muted);
+      drawCanvasText(ctx, value, x + 28 * scale, y + height * 0.76, fitCanvasFont(ctx, value, width - 56 * scale, 42 * scale, 26 * scale, 1000), 1000, palette.text);
+    }
 
-      const metricItems = [
+    function drawShareSmallMetric(ctx, x, y, width, height, label, value, palette, scale) {
+      fillCanvasRoundRect(ctx, x, y, width, height, 16 * scale, palette.metric);
+      ctx.strokeStyle = palette.line;
+      ctx.lineWidth = Math.max(1, 2 * scale);
+      strokeCanvasRoundRect(ctx, x, y, width, height, 16 * scale);
+      drawCanvasText(ctx, label, x + 20 * scale, y + height * 0.36, 20 * scale, 900, palette.muted);
+      drawCanvasText(ctx, String(value), x + 20 * scale, y + height * 0.76, fitCanvasFont(ctx, String(value), width - 40 * scale, 28 * scale, 18 * scale, 1000), 1000, palette.text);
+    }
+
+    function drawShareRoutePanel(ctx, x, y, width, height, route, palette, scale) {
+      fillCanvasRoundRect(ctx, x, y, width, height, 22 * scale, palette.routeBg);
+      ctx.strokeStyle = palette.line;
+      ctx.lineWidth = Math.max(1, 2 * scale);
+      strokeCanvasRoundRect(ctx, x, y, width, height, 22 * scale);
+      drawCanvasText(ctx, "路線", x + 24 * scale, y + 42 * scale, 24 * scale, 1000, palette.text);
+      drawRouteMap(ctx, route.points || [], x + 22 * scale, y + 58 * scale, width - 44 * scale, height - 82 * scale, palette, scale);
+    }
+
+    function drawRouteMap(ctx, points, x, y, width, height, palette, scale) {
+      fillCanvasRoundRect(ctx, x, y, width, height, 16 * scale, palette.routeSoft);
+      if (!points.length) return;
+      const bounds = routeBounds(points);
+      const latSpan = Math.max(0.000001, bounds.maxLat - bounds.minLat);
+      const lonSpan = Math.max(0.000001, bounds.maxLon - bounds.minLon);
+      const pad = 24 * scale;
+      const drawW = width - pad * 2;
+      const drawH = height - pad * 2;
+      const routeScale = Math.min(drawW / lonSpan, drawH / latSpan);
+      const midLat = (bounds.minLat + bounds.maxLat) / 2;
+      const midLon = (bounds.minLon + bounds.maxLon) / 2;
+      const centerX = x + width / 2;
+      const centerY = y + height / 2;
+      const project = (point) => ({
+        x: centerX + (point.lon - midLon) * routeScale,
+        y: centerY - (point.lat - midLat) * routeScale
+      });
+
+      ctx.save();
+      canvasRoundRectPath(ctx, x, y, width, height, 16 * scale);
+      ctx.clip();
+      ctx.strokeStyle = palette.line;
+      ctx.lineWidth = Math.max(1, 1.2 * scale);
+      ctx.globalAlpha = 0.45;
+      for (let i = 1; i <= 3; i += 1) {
+        const gx = x + (width / 4) * i;
+        const gy = y + (height / 4) * i;
+        ctx.beginPath();
+        ctx.moveTo(gx, y);
+        ctx.lineTo(gx, y + height);
+        ctx.moveTo(x, gy);
+        ctx.lineTo(x + width, gy);
+        ctx.stroke();
+      }
+      ctx.globalAlpha = 1;
+      ctx.strokeStyle = palette.routeLine;
+      ctx.lineWidth = Math.max(5, 7 * scale);
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+      ctx.beginPath();
+      points.forEach((point, index) => {
+        const pos = project(point);
+        if (index === 0) ctx.moveTo(pos.x, pos.y);
+        else ctx.lineTo(pos.x, pos.y);
+      });
+      ctx.stroke();
+
+      const start = project(points[0]);
+      const end = project(points[points.length - 1]);
+      drawRouteDot(ctx, start.x, start.y, 8 * scale, "#22C55E");
+      drawRouteDot(ctx, end.x, end.y, 9 * scale, palette.red);
+      ctx.restore();
+    }
+
+    function drawRouteDot(ctx, x, y, radius, color) {
+      ctx.fillStyle = "#FFFFFF";
+      ctx.beginPath();
+      ctx.arc(x, y, radius + 4, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.arc(x, y, radius, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    function drawShareZoneBars(ctx, x, y, width, height, zones, palette, scale) {
+      const colors = ["#4e9fca", "#42a66b", "#e1a739", "#df7646", "#cc4e5c"];
+      const gap = 20 * scale;
+      const itemWidth = (width - gap * 4) / 5;
+      zones.forEach((value, index) => {
+        const percent = value !== "" && value != null ? Math.min(100, Math.max(0, number(value))) : 0;
+        const barX = x + index * (itemWidth + gap);
+        const trackY = y + 8 * scale;
+        const trackH = height * 0.52;
+        fillCanvasRoundRect(ctx, barX, trackY, itemWidth, trackH, 10 * scale, palette.line);
+        const fillHeight = Math.max(4 * scale, (trackH * percent) / 100);
+        fillCanvasRoundRect(ctx, barX, trackY + trackH - fillHeight, itemWidth, fillHeight, 9 * scale, colors[index]);
+        ctx.textAlign = "center";
+        drawCanvasText(ctx, `Z${index + 1}`, barX + itemWidth / 2, y + trackH + 42 * scale, 21 * scale, 1000, palette.text);
+        drawCanvasText(ctx, percent ? `${formatCompactNumber(percent)}%` : "--", barX + itemWidth / 2, y + trackH + 68 * scale, 18 * scale, 900, palette.muted);
+        ctx.textAlign = "left";
+      });
+    }
+
+    function drawShareWeather(ctx, x, y, width, items, palette, scale) {
+      const itemW = width / Math.max(1, items.length);
+      items.forEach(([label, value], index) => {
+        const itemX = x + itemW * index;
+        drawCanvasText(ctx, label, itemX, y + 24 * scale, 19 * scale, 900, palette.muted);
+        drawCanvasText(ctx, value, itemX, y + 56 * scale, 27 * scale, 1000, palette.text, itemW - 12 * scale);
+      });
+    }
+
+    function drawShareFooter(ctx, x, y, width, palette, scale) {
+      fillCanvasRoundRect(ctx, x, y - 18 * scale, width, Math.max(1, 1.2 * scale), 1, palette.line);
+      drawCanvasText(ctx, "Generated by 燃速誌", x, y, 23 * scale, 900, palette.muted);
+      ctx.textAlign = "right";
+      drawCanvasText(ctx, "Keep running.", x + width, y, 23 * scale, 900, palette.accent);
+      ctx.textAlign = "left";
+    }
+
+    function shareMetricItems(record) {
+      const avgHeartRate = getAverageHeartRate(record);
+      const maxHeartRate = getMaxHeartRate(record);
+      const monthKm = recordMonthKm(record);
+      return [
         avgHeartRate ? ["平均心率", `${avgHeartRate} bpm`] : null,
         maxHeartRate ? ["最大心率", `${maxHeartRate} bpm`] : null,
         record.calories ? ["卡路里", `${record.calories} 卡`] : null,
         record.cadence ? ["步頻", record.cadence] : null,
         monthKm > 0 ? ["本月累積", formatKm(monthKm)] : null,
         formatSurface(record.surface) ? ["場地", formatSurface(record.surface)] : null
-      ].filter(Boolean).slice(0, 6);
-
-      const metricY = statsY + 178;
-      metricItems.forEach(([label, value], index) => {
-        const x = 100 + (index % 3) * 300;
-        const y = metricY + Math.floor(index / 3) * 112;
-        drawShareSmallMetric(ctx, x, y, 274, 88, label, value);
-      });
-
-      const zonesY = metricY + (metricItems.length > 3 ? 244 : 132);
-      if (hasZones) {
-        drawCanvasText(ctx, "心率區間", 100, zonesY, 28, 1000, "#111827");
-        drawShareZoneBars(ctx, 100, zonesY + 28, 880, 142, zones);
-      } else {
-        drawCanvasText(ctx, "心率區間", 100, zonesY, 28, 1000, "#111827");
-        drawCanvasText(ctx, "尚無心率區間資料", 100, zonesY + 52, 25, 850, "#6B7280");
-      }
-
-      const weatherItems = shareWeatherItems(record.weather);
-      const weatherY = hasZones ? zonesY + 190 : zonesY + 106;
-      if (weatherItems.length) {
-        drawCanvasText(ctx, "天氣", 100, weatherY, 28, 1000, "#111827");
-        weatherItems.forEach(([label, value], index) => {
-          const x = 100 + index * 220;
-          drawCanvasText(ctx, label, x, weatherY + 48, 22, 900, "#6B7280");
-          drawCanvasText(ctx, value, x, weatherY + 82, 30, 1000, "#111827");
-        });
-      }
-
-      fillCanvasRoundRect(ctx, 100, 1258, 880, 1, 1, "#E5E7EB");
-      drawCanvasText(ctx, "Generated by 燃速誌", 100, 1300, 24, 900, "#6B7280");
-      ctx.textAlign = "right";
-      drawCanvasText(ctx, "Keep running.", 980, 1300, 24, 900, "#F97316");
-      ctx.textAlign = "left";
-
-      return canvasToBlob(canvas);
-    }
-
-    function drawShareMetric(ctx, x, y, width, height, label, value) {
-      fillCanvasRoundRect(ctx, x, y, width, height, 22, "#FFF7ED");
-      fillCanvasRoundRect(ctx, x, y, 7, height, 4, "#F97316");
-      drawCanvasText(ctx, label, x + 28, y + 46, 24, 900, "#6B7280");
-      drawCanvasText(ctx, value, x + 28, y + 100, 44, 1000, "#111827");
-    }
-
-    function drawShareSmallMetric(ctx, x, y, width, height, label, value) {
-      fillCanvasRoundRect(ctx, x, y, width, height, 18, "#FFFFFF");
-      ctx.strokeStyle = "#E5E7EB";
-      ctx.lineWidth = 2;
-      strokeCanvasRoundRect(ctx, x, y, width, height, 18);
-      drawCanvasText(ctx, label, x + 22, y + 32, 21, 900, "#6B7280");
-      drawCanvasText(ctx, String(value), x + 22, y + 66, 30, 1000, "#111827", width - 44);
-    }
-
-    function drawShareZoneBars(ctx, x, y, width, height, zones) {
-      const colors = ["#4e9fca", "#42a66b", "#e1a739", "#df7646", "#cc4e5c"];
-      const gap = 22;
-      const itemWidth = (width - gap * 4) / 5;
-      zones.forEach((value, index) => {
-        const percent = value !== "" && value != null ? Math.min(100, Math.max(0, number(value))) : 0;
-        const barX = x + index * (itemWidth + gap);
-        const trackY = y + 10;
-        fillCanvasRoundRect(ctx, barX, trackY, itemWidth, 74, 12, "#ECECEC");
-        const fillHeight = Math.max(4, (74 * percent) / 100);
-        fillCanvasRoundRect(ctx, barX, trackY + 74 - fillHeight, itemWidth, fillHeight, 10, colors[index]);
-        ctx.textAlign = "center";
-        drawCanvasText(ctx, `Z${index + 1}`, barX + itemWidth / 2, y + 112, 22, 1000, "#111827");
-        drawCanvasText(ctx, percent ? `${formatCompactNumber(percent)}%` : "--", barX + itemWidth / 2, y + 140, 20, 900, "#6B7280");
-        ctx.textAlign = "left";
-      });
+      ].filter(Boolean);
     }
 
     function shareWeatherItems(weather) {
@@ -6099,6 +6666,7 @@
       els.recordWindSpeed.value = record.weather?.windSpeed ?? "";
       els.recordWindDirection.value = record.weather?.windDirection || "";
       els.recordNotes.value = record.notes || "";
+      setCurrentRouteData(record.route ? cloneRouteData(record.route) : null);
       showView("records");
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
