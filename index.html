@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#F5F7FA">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-title" content="配速紀錄">
-  <title>配速紀錄</title>
+  <meta name="apple-mobile-web-app-title" content="燃速誌">
+  <title>燃速誌</title>
   <style>
     :root {
       color-scheme: light;
@@ -79,6 +79,131 @@
       align-items: center;
       gap: 8px;
       flex: 0 0 auto;
+    }
+
+    .profile-card {
+      --level-color: #FACC15;
+      --level-soft: color-mix(in srgb, var(--level-color) 18%, #ffffff);
+      display: grid;
+      gap: 12px;
+      margin-bottom: 12px;
+      padding: 12px;
+      border: 1px solid color-mix(in srgb, var(--level-color) 34%, var(--line));
+      border-left: 6px solid var(--level-color);
+      border-radius: var(--radius);
+      background: linear-gradient(135deg, var(--level-soft), #ffffff 68%);
+      box-shadow: 0 12px 28px rgba(17, 24, 39, 0.08);
+      color: #111827;
+      overflow: hidden;
+    }
+
+    .profile-main {
+      display: grid;
+      grid-template-columns: 44px minmax(0, 1fr);
+      gap: 10px;
+      align-items: center;
+    }
+
+    .profile-avatar {
+      display: grid;
+      width: 44px;
+      height: 44px;
+      place-items: center;
+      border-radius: 50%;
+      background: color-mix(in srgb, var(--level-color) 72%, #111827);
+      color: #ffffff;
+      font-size: 1.25rem;
+      font-weight: 1000;
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.28);
+    }
+
+    .profile-fields {
+      display: grid;
+      gap: 8px;
+    }
+
+    .profile-inline {
+      display: grid;
+      grid-template-columns: minmax(0, 0.62fr) minmax(0, 1.38fr);
+      gap: 8px;
+    }
+
+    .profile-field {
+      display: grid;
+      gap: 3px;
+      min-width: 0;
+    }
+
+    .profile-field span,
+    .profile-level-label,
+    .profile-next {
+      color: rgba(17, 24, 39, 0.62);
+      font-size: 0.68rem;
+      font-weight: 900;
+      line-height: 1;
+    }
+
+    .profile-field input {
+      width: 100%;
+      min-height: 34px;
+      border: 1px solid rgba(17, 24, 39, 0.14);
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.56);
+      color: #111827;
+      font-weight: 950;
+      outline: 0;
+      padding: 7px 8px;
+      transition: border-color 150ms ease, box-shadow 150ms ease, background-color 150ms ease;
+    }
+
+    .profile-field input:focus {
+      border-color: color-mix(in srgb, var(--level-color) 70%, #111827);
+      background: rgba(255, 255, 255, 0.74);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--level-color) 24%, transparent);
+    }
+
+    .profile-level {
+      display: grid;
+      gap: 7px;
+      align-content: center;
+    }
+
+    .profile-level-row {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .profile-level-name {
+      color: #111827;
+      font-size: 1.02rem;
+      font-weight: 1000;
+      line-height: 1.05;
+    }
+
+    .profile-total {
+      color: #111827;
+      font-size: 1.1rem;
+      font-weight: 1000;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+
+    .profile-level-bar {
+      height: 7px;
+      border-radius: 999px;
+      background: rgba(17, 24, 39, 0.1);
+      overflow: hidden;
+    }
+
+    .profile-level-bar span {
+      display: block;
+      width: var(--profile-progress, 0%);
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, #ffffff, var(--level-color));
+      transition: width 420ms cubic-bezier(0.2, 0.8, 0.2, 1);
     }
 
     .brand {
@@ -494,8 +619,16 @@
       border-radius: var(--radius);
       background: #F9FAFB;
       color: var(--ink);
+      cursor: pointer;
       font-size: 1.04rem;
       font-weight: 900;
+      transition: transform 140ms ease, border-color 140ms ease, box-shadow 140ms ease;
+    }
+
+    .distance-unit:hover {
+      border-color: rgba(249, 115, 22, 0.42);
+      box-shadow: 0 8px 18px rgba(17, 24, 39, 0.08);
+      transform: translateY(-1px);
     }
 
     .presets {
@@ -677,13 +810,6 @@
       white-space: nowrap;
     }
 
-    .text-tools {
-      display: grid;
-      gap: 10px;
-      border-top: 1px solid var(--line);
-      padding-top: 14px;
-    }
-
     .file-line {
       display: grid;
       grid-template-columns: minmax(0, 1fr) auto;
@@ -734,7 +860,9 @@
 
     .record-tools,
     .insights-panel,
-    .calendar-panel {
+    .achievements-panel,
+    .calendar-panel,
+    .records-panel {
       border: 1px solid var(--line);
       border-radius: var(--radius);
       background: #ffffff;
@@ -781,6 +909,145 @@
       gap: 10px;
       margin-bottom: 12px;
       padding: 10px;
+    }
+
+    .collapsible-panel {
+      overflow: hidden;
+    }
+
+    .collapsible-toggle {
+      width: 100%;
+      border: 0;
+      background: transparent;
+      color: var(--ink);
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      text-align: left;
+      cursor: pointer;
+      font: inherit;
+    }
+
+    .collapsible-title {
+      display: grid;
+      gap: 2px;
+      min-width: 0;
+    }
+
+    .collapsible-kicker {
+      color: var(--muted);
+      font-size: 0.68rem;
+      font-weight: 900;
+    }
+
+    .collapsible-title strong {
+      color: var(--ink);
+      font-size: 0.96rem;
+      line-height: 1.15;
+      font-weight: 1000;
+      white-space: nowrap;
+    }
+
+    .collapsible-control {
+      display: inline-grid;
+      grid-auto-flow: column;
+      align-items: center;
+      gap: 6px;
+      color: var(--muted);
+      font-size: 0.72rem;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .collapsible-control svg {
+      transition: transform 180ms cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+
+    .collapsible-panel.is-collapsed .collapsible-control svg,
+    .collapsible-toggle[aria-expanded="false"] .collapsible-control svg {
+      transform: rotate(-90deg);
+    }
+
+    .collapsible-toggle:focus-visible {
+      outline: 3px solid rgba(249, 115, 22, 0.22);
+      outline-offset: 4px;
+      border-radius: 8px;
+    }
+
+    .collapsible-body {
+      display: grid;
+      gap: 10px;
+      margin-top: 10px;
+      transform-origin: top;
+      will-change: height, opacity, transform;
+    }
+
+    .collapsible-body.is-animating {
+      overflow: hidden;
+      transition: height 260ms cubic-bezier(0.2, 0.8, 0.2, 1), opacity 180ms ease, transform 260ms cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+
+    .collapsible-body[hidden] {
+      display: none;
+    }
+
+    .records-panel {
+      display: grid;
+      gap: 10px;
+      margin-top: 12px;
+      padding: 10px;
+    }
+
+    .records-panel-head {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .records-panel-head .collapsible-toggle {
+      flex: 1 1 auto;
+      min-width: 0;
+    }
+
+    .record-list-controls {
+      display: inline-flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+      flex: 0 0 auto;
+      min-width: 0;
+    }
+
+    .record-count-note {
+      margin: 0;
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    .record-limit-control {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      color: var(--muted);
+      font-size: 0.72rem;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .record-limit-control select {
+      width: auto;
+      min-height: 32px;
+      border-radius: 8px;
+      padding: 0 26px 0 9px;
+      font-size: 0.82rem;
+      font-weight: 900;
+    }
+
+    .records-body {
+      margin-top: 0;
     }
 
     .insight-grid,
@@ -1003,6 +1270,244 @@
       font-size: 0.62rem;
       font-weight: 900;
       letter-spacing: 0;
+    }
+
+    .achievements-panel {
+      display: grid;
+      gap: 10px;
+      margin-bottom: 12px;
+      padding: 10px;
+    }
+
+    .achievement-head {
+      display: flex;
+      align-items: start;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .achievement-kicker,
+    .achievement-card-label,
+    .achievement-item-meta {
+      color: var(--muted);
+      font-size: 0.72rem;
+      font-weight: 900;
+    }
+
+    .achievement-total {
+      margin-top: 2px;
+      color: var(--ink);
+      font-size: 1.38rem;
+      line-height: 1;
+      font-weight: 1000;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .achievement-percent {
+      color: var(--track);
+      font-size: 1.05rem;
+      font-weight: 1000;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .achievement-progress,
+    .achievement-card-bar,
+    .achievement-item-bar {
+      height: 6px;
+      border-radius: 999px;
+      background: var(--line);
+      overflow: hidden;
+    }
+
+    .achievement-progress span,
+    .achievement-card-bar span,
+    .achievement-item-bar span {
+      display: block;
+      width: var(--progress, 0%);
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--coral), var(--track) 70%, #FACC15);
+      transition: width 420ms cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+
+    .achievement-tabs {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .achievement-tab {
+      min-width: 0;
+      border: 1px solid var(--line);
+      border-left: 3px solid #E5E7EB;
+      border-radius: 6px;
+      background: #ffffff;
+      color: var(--ink);
+      cursor: pointer;
+      padding: 8px 9px;
+      text-align: left;
+      transition: border-color 150ms ease, transform 150ms ease;
+    }
+
+    .achievement-tab:hover,
+    .achievement-tab.active {
+      border-left-color: var(--track);
+      border-color: rgba(249, 115, 22, 0.32);
+    }
+
+    .achievement-tab:active {
+      transform: scale(0.98);
+    }
+
+    .achievement-tab[data-achievement-category="hidden"] {
+      grid-column: 1 / -1;
+    }
+
+    .achievement-card-main {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+
+    .achievement-card-name {
+      font-size: 0.86rem;
+      font-weight: 1000;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .achievement-card-count {
+      color: var(--muted);
+      font-size: 0.72rem;
+      font-weight: 900;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+
+    .achievement-list {
+      display: grid;
+      gap: 7px;
+    }
+
+    .achievement-list-compact {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 6px;
+    }
+
+    .achievement-list-hidden {
+      gap: 8px;
+    }
+
+    .achievement-item {
+      --achievement-color: var(--track);
+      display: grid;
+      grid-template-columns: 34px minmax(0, 1fr);
+      gap: 8px;
+      align-items: center;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #ffffff;
+      padding: 8px;
+    }
+
+    .achievement-item.compact {
+      grid-template-columns: 26px minmax(0, 1fr);
+      gap: 7px;
+      align-items: start;
+      padding: 7px;
+    }
+
+    .achievement-item.hidden-locked {
+      border-style: dashed;
+      background: linear-gradient(135deg, rgba(17, 24, 39, 0.035), #ffffff);
+    }
+
+    .achievement-item.unlocked {
+      border-color: rgba(249, 115, 22, 0.32);
+    }
+
+    .achievement-mark {
+      display: grid;
+      width: 34px;
+      height: 34px;
+      place-items: center;
+      border-radius: 50%;
+      background: var(--sky-soft);
+      color: var(--muted);
+      font-size: 1rem;
+      font-weight: 1000;
+    }
+
+    .achievement-item.compact .achievement-mark {
+      width: 26px;
+      height: 26px;
+      font-size: 0.72rem;
+    }
+
+    .achievement-item.unlocked .achievement-mark {
+      background: var(--achievement-color);
+      color: #ffffff;
+    }
+
+    .achievement-item.hidden-locked .achievement-mark {
+      background: var(--ink);
+      color: #ffffff;
+    }
+
+    .achievement-item-title {
+      color: var(--ink);
+      font-size: 0.88rem;
+      font-weight: 1000;
+      line-height: 1.15;
+    }
+
+    .achievement-item.compact .achievement-item-title {
+      font-size: 0.8rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .achievement-item-desc {
+      margin-top: 2px;
+      color: var(--muted);
+      font-size: 0.7rem;
+      font-weight: 780;
+      line-height: 1.25;
+    }
+
+    .achievement-item.compact .achievement-item-desc {
+      display: none;
+    }
+
+    .achievement-item-earned {
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: 0.66rem;
+      font-weight: 820;
+      line-height: 1.2;
+    }
+
+    .achievement-item-footer {
+      display: grid;
+      gap: 5px;
+      margin-top: 7px;
+    }
+
+    .achievement-item.compact .achievement-item-footer {
+      gap: 4px;
+      margin-top: 5px;
+    }
+
+    .achievement-item.compact .achievement-item-bar {
+      height: 4px;
+    }
+
+    .achievement-item .achievement-item-bar span {
+      background: linear-gradient(90deg, color-mix(in srgb, var(--achievement-color) 42%, #ffffff), var(--achievement-color));
     }
 
     .calendar-panel {
@@ -1639,10 +2144,14 @@
     html[data-theme="dark"] .record-card-body,
     html[data-theme="dark"] .record-tools,
     html[data-theme="dark"] .insights-panel,
+    html[data-theme="dark"] .achievements-panel,
     html[data-theme="dark"] .calendar-panel,
+    html[data-theme="dark"] .records-panel,
     html[data-theme="dark"] .insight-card,
     html[data-theme="dark"] .pb-card,
     html[data-theme="dark"] .analysis-card,
+    html[data-theme="dark"] .achievement-tab,
+    html[data-theme="dark"] .achievement-item,
     html[data-theme="dark"] .heart-panel,
     html[data-theme="dark"] .heart-value,
     html[data-theme="dark"] .detail-metric,
@@ -1671,7 +2180,8 @@
     }
 
     html[data-theme="dark"] .summary-item,
-    html[data-theme="dark"] .split-item {
+    html[data-theme="dark"] .split-item,
+    html[data-theme="dark"] .achievement-mark {
       background: #000000;
       border-color: var(--line);
     }
@@ -1715,6 +2225,46 @@
       fill: #000000;
     }
 
+    html[data-theme="dark"] .profile-card {
+      --level-soft: color-mix(in srgb, var(--level-color) 28%, #000000);
+      background: linear-gradient(135deg, var(--level-soft), #000000 72%);
+      border-color: color-mix(in srgb, var(--level-color) 46%, #26303B);
+      box-shadow: 0 16px 34px rgba(0, 0, 0, 0.42);
+      color: #F9FAFB;
+    }
+
+    html[data-theme="dark"] .profile-field span,
+    html[data-theme="dark"] .profile-level-label,
+    html[data-theme="dark"] .profile-next {
+      color: rgba(249, 250, 251, 0.66);
+    }
+
+    html[data-theme="dark"] .profile-field input {
+      background: rgba(0, 0, 0, 0.46);
+      border-color: rgba(249, 250, 251, 0.18);
+      color: #F9FAFB;
+    }
+
+    html[data-theme="dark"] .profile-field input:focus {
+      border-color: color-mix(in srgb, var(--level-color) 62%, #F9FAFB);
+      background: rgba(0, 0, 0, 0.62);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--level-color) 24%, transparent);
+    }
+
+    html[data-theme="dark"] .profile-level-name,
+    html[data-theme="dark"] .profile-total {
+      color: #F9FAFB;
+    }
+
+    html[data-theme="dark"] .profile-level-bar {
+      background: rgba(249, 250, 251, 0.12);
+    }
+
+    html[data-theme="dark"] .achievement-item.hidden-locked {
+      background: linear-gradient(135deg, rgba(127, 29, 29, 0.18), #000000);
+      border-color: rgba(249, 250, 251, 0.24);
+    }
+
     html[data-theme="dark"] input:focus,
     html[data-theme="dark"] select:focus,
     html[data-theme="dark"] textarea:focus {
@@ -1732,6 +2282,11 @@
         grid-template-columns: minmax(0, 1fr) 240px;
         gap: 14px;
         align-items: start;
+      }
+
+      .profile-card {
+        grid-template-columns: minmax(0, 1fr) minmax(220px, 0.58fr);
+        align-items: center;
       }
 
       .route-art {
@@ -1777,6 +2332,14 @@
         height: 38px;
       }
 
+      .profile-card {
+        padding: 10px;
+      }
+
+      .profile-inline {
+        grid-template-columns: 1fr;
+      }
+
       .presets {
         grid-template-columns: repeat(3, minmax(0, 1fr));
       }
@@ -1810,6 +2373,15 @@
       .list-actions .action-button svg {
         width: 16px;
         height: 16px;
+      }
+
+      .records-panel-head {
+        flex-wrap: wrap;
+      }
+
+      .record-list-controls {
+        width: 100%;
+        justify-content: space-between;
       }
 
       .time-line,
@@ -2029,7 +2601,7 @@
             <path d="M9 2h6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
           </svg>
         </div>
-        <h1>配速紀錄</h1>
+        <h1>燃速誌</h1>
       </div>
 
       <div class="top-actions">
@@ -2042,12 +2614,41 @@
             <path d="M20 15.2A7.7 7.7 0 0 1 8.8 4 8.5 8.5 0 1 0 20 15.2Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
           </svg>
         </button>
-        <div class="segmented two" aria-label="單位">
-          <button type="button" class="active" data-unit="km">km</button>
-          <button type="button" data-unit="mi">mi</button>
-        </div>
       </div>
     </header>
+
+    <section class="profile-card" id="profileCard" aria-label="個人檔案">
+      <div class="profile-main">
+        <div class="profile-avatar" id="profileAvatar" aria-hidden="true">R</div>
+        <div class="profile-fields">
+          <label class="profile-field" for="profileName">
+            <span>名字</span>
+            <input id="profileName" type="text" autocomplete="name" placeholder="Runner">
+          </label>
+          <div class="profile-inline">
+            <label class="profile-field" for="profileAge">
+              <span>歲數</span>
+              <input id="profileAge" type="number" min="0" max="120" inputmode="numeric" placeholder="--">
+            </label>
+            <label class="profile-field" for="profileGoal">
+              <span>目標</span>
+              <input id="profileGoal" type="text" autocomplete="off" placeholder="本月 50 km">
+            </label>
+          </div>
+        </div>
+      </div>
+      <div class="profile-level">
+        <div class="profile-level-label">累積等級</div>
+        <div class="profile-level-row">
+          <div class="profile-level-name" id="profileLevelName">Lv.1</div>
+          <div class="profile-total" id="profileTotalKm">0 km</div>
+        </div>
+        <div class="profile-level-bar" aria-hidden="true">
+          <span id="profileLevelFill"></span>
+        </div>
+        <div class="profile-next" id="profileNextLevel">開始累積第一筆跑步</div>
+      </div>
+    </section>
 
     <nav class="app-tabs" aria-label="頁面">
       <button type="button" class="active" data-view="calculator">配速</button>
@@ -2097,7 +2698,7 @@
                   <input id="distanceInput" name="distance" type="number" min="0" step="0.01" inputmode="decimal" value="5">
                   <span class="input-unit">自訂</span>
                 </div>
-                <div class="distance-unit" id="distanceUnit">km</div>
+                <button type="button" class="distance-unit" id="distanceUnit" aria-label="切換距離單位">km</button>
               </div>
               <div class="presets" id="presets" aria-label="常用距離"></div>
             </section>
@@ -2332,23 +2933,6 @@
               </section>
             </div>
 
-            <section class="text-tools">
-              <span class="label">智慧分析</span>
-              <div class="actions-row">
-                <button type="button" class="action-button secondary" id="parseTextButton">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                    <path d="M7 7h10M7 12h10M7 17h6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
-                  </svg>
-                  智慧分析
-                </button>
-              </div>
-
-              <section class="field">
-                <label for="ocrText">貼上文字</label>
-                <textarea id="ocrText"></textarea>
-              </section>
-            </section>
-
             <div class="actions-row">
               <button type="submit" class="action-button primary" id="saveRecordButton">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -2429,12 +3013,67 @@
               </section>
             </div>
           </section>
-          <section class="insights-panel" aria-label="跑量統計與個人最佳">
-            <div class="insight-grid" id="volumeGrid"></div>
-            <div class="pb-grid" id="pbGrid"></div>
-            <div class="analysis-grid" id="analysisGrid"></div>
+          <section class="insights-panel collapsible-panel" aria-label="跑量統計與個人最佳">
+            <button type="button" class="collapsible-toggle" data-collapse-toggle="insights" aria-expanded="true" aria-controls="insightsBody">
+              <span class="collapsible-title">
+                <span class="collapsible-kicker">Dashboard</span>
+                <strong>統計與最佳</strong>
+              </span>
+              <span class="collapsible-control">
+                <span data-collapse-state>收合</span>
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="m6 9 6 6 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </span>
+            </button>
+            <div class="collapsible-body" id="insightsBody" data-collapse-body="insights">
+              <div class="insight-grid" id="volumeGrid"></div>
+              <div class="pb-grid" id="pbGrid"></div>
+              <div class="analysis-grid" id="analysisGrid"></div>
+            </div>
           </section>
-          <section class="calendar-panel" aria-label="月曆檢視">
+          <section class="achievements-panel collapsible-panel" id="achievementsPanel" aria-label="成就系統">
+            <button type="button" class="collapsible-toggle" data-collapse-toggle="achievements" aria-expanded="false" aria-controls="achievementsBody">
+              <span class="collapsible-title">
+                <span class="collapsible-kicker">Achievements</span>
+                <strong>成就系統</strong>
+              </span>
+              <span class="collapsible-control">
+                <span data-collapse-state>展開</span>
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="m6 9 6 6 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </span>
+            </button>
+            <div class="collapsible-body" id="achievementsBody" data-collapse-body="achievements">
+            <div class="achievement-head">
+              <div>
+                <div class="achievement-kicker">成就</div>
+                <div class="achievement-total" id="achievementTotal">0 / 0</div>
+              </div>
+              <div class="achievement-percent" id="achievementPercent">0%</div>
+            </div>
+            <div class="achievement-progress" aria-hidden="true">
+              <span id="achievementProgressFill"></span>
+            </div>
+            <div class="achievement-tabs" id="achievementTabs"></div>
+            <div class="achievement-list" id="achievementList"></div>
+            </div>
+          </section>
+          <section class="calendar-panel collapsible-panel" aria-label="月曆檢視">
+            <button type="button" class="collapsible-toggle" data-collapse-toggle="calendar" aria-expanded="false" aria-controls="calendarBody">
+              <span class="collapsible-title">
+                <span class="collapsible-kicker">Calendar</span>
+                <strong>月曆檢視</strong>
+              </span>
+              <span class="collapsible-control">
+                <span data-collapse-state>展開</span>
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="m6 9 6 6 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </span>
+            </button>
+            <div class="collapsible-body" id="calendarBody" data-collapse-body="calendar">
             <div class="calendar-head">
               <button type="button" class="icon-button" id="calendarPrev" aria-label="上一個月" title="上一個月">
                 <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -2449,9 +3088,39 @@
               </button>
             </div>
             <div class="calendar-grid" id="calendarGrid"></div>
+            </div>
           </section>
-          <p class="record-count-note" id="recordCount"></p>
-          <div class="record-list" id="recordList"></div>
+          <section class="records-panel collapsible-panel" data-collapsible="records" aria-label="紀錄列表">
+            <div class="records-panel-head">
+              <button type="button" class="collapsible-toggle" data-collapse-toggle="records" aria-expanded="true" aria-controls="recordsBody">
+                <span class="collapsible-title">
+                  <span class="collapsible-kicker">Records</span>
+                  <strong>紀錄列表</strong>
+                </span>
+                <span class="collapsible-control">
+                  <span data-collapse-state>收合</span>
+                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="m6 9 6 6 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </span>
+              </button>
+              <div class="record-list-controls">
+                <p class="record-count-note" id="recordCount"></p>
+                <label class="record-limit-control" for="recordLimit">
+                  <span>顯示</span>
+                  <select id="recordLimit" aria-label="紀錄顯示筆數">
+                    <option value="10">10</option>
+                    <option value="30">30</option>
+                    <option value="50">50</option>
+                    <option value="all">全部</option>
+                  </select>
+                </label>
+              </div>
+            </div>
+            <div class="collapsible-body records-body" id="recordsBody" data-collapse-body="records">
+              <div class="record-list" id="recordList"></div>
+            </div>
+          </section>
         </section>
       </div>
     </section>
@@ -2464,6 +3133,7 @@
     const CALC_STORAGE_KEY = "pace-calculator-state-v2";
     const RECORD_STORAGE_KEY = "pace-run-records-v1";
     const PREF_STORAGE_KEY = "pace-run-preferences-v1";
+    const PROFILE_STORAGE_KEY = "pace-run-profile-v1";
     const DEFAULT_CALC_STATE = {
       mode: "pace",
       unit: "km",
@@ -2480,7 +3150,19 @@
       surfaceFilter: "all",
       rangeFilter: "all",
       sort: "date-desc",
-      calendarMonth: ""
+      calendarMonth: "",
+      recordLimit: "10",
+      dashboardOpen: {
+        insights: true,
+        achievements: false,
+        calendar: false,
+        records: true
+      }
+    };
+    const DEFAULT_PROFILE_STATE = {
+      name: "Runner",
+      age: "",
+      goal: "本月 50 km"
     };
 
     const presetDistances = [
@@ -2493,6 +3175,8 @@
 
     const calcState = loadJson(CALC_STORAGE_KEY, DEFAULT_CALC_STATE);
     const prefState = { ...DEFAULT_PREF_STATE, ...loadJson(PREF_STORAGE_KEY, DEFAULT_PREF_STATE) };
+    prefState.dashboardOpen = { ...DEFAULT_PREF_STATE.dashboardOpen, ...(prefState.dashboardOpen || {}) };
+    const profileState = { ...DEFAULT_PROFILE_STATE, ...loadJson(PROFILE_STORAGE_KEY, DEFAULT_PROFILE_STATE) };
     if (!prefState.calendarMonth) prefState.calendarMonth = monthKey(new Date());
     let records = loadJson(RECORD_STORAGE_KEY, []);
     let editingRecordId = null;
@@ -2501,6 +3185,8 @@
     let pendingUndoDelete = null;
     let previousSummaryMetrics = null;
     let pendingCalendarMotion = "";
+    let activeAchievementCategory = "distance";
+    let pendingAchievementUnlocks = [];
     const motionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
 
     const $ = (selector) => document.querySelector(selector);
@@ -2515,6 +3201,15 @@
       modeButtons: $$("[data-mode]"),
       unitButtons: $$("[data-unit]"),
       themeToggle: $("#themeToggle"),
+      profileCard: $("#profileCard"),
+      profileAvatar: $("#profileAvatar"),
+      profileName: $("#profileName"),
+      profileAge: $("#profileAge"),
+      profileGoal: $("#profileGoal"),
+      profileLevelName: $("#profileLevelName"),
+      profileTotalKm: $("#profileTotalKm"),
+      profileLevelFill: $("#profileLevelFill"),
+      profileNextLevel: $("#profileNextLevel"),
       distanceField: $("#distanceField"),
       timeField: $("#timeField"),
       paceField: $("#paceField"),
@@ -2568,19 +3263,25 @@
       recordWindSpeed: $("#recordWindSpeed"),
       recordWindDirection: $("#recordWindDirection"),
       recordNotes: $("#recordNotes"),
-      parseTextButton: $("#parseTextButton"),
-      ocrText: $("#ocrText"),
       saveRecordButton: $("#saveRecordButton"),
       backupButton: $("#backupButton"),
       importInput: $("#importInput"),
       exportButton: $("#exportButton"),
+      collapseToggles: $$("[data-collapse-toggle]"),
       recordSearch: $("#recordSearch"),
       recordSurfaceFilter: $("#recordSurfaceFilter"),
       recordRangeFilter: $("#recordRangeFilter"),
       recordSort: $("#recordSort"),
+      recordLimit: $("#recordLimit"),
       volumeGrid: $("#volumeGrid"),
       pbGrid: $("#pbGrid"),
       analysisGrid: $("#analysisGrid"),
+      achievementsPanel: $("#achievementsPanel"),
+      achievementTotal: $("#achievementTotal"),
+      achievementPercent: $("#achievementPercent"),
+      achievementProgressFill: $("#achievementProgressFill"),
+      achievementTabs: $("#achievementTabs"),
+      achievementList: $("#achievementList"),
       calendarGrid: $("#calendarGrid"),
       calendarLabel: $("#calendarLabel"),
       calendarPrev: $("#calendarPrev"),
@@ -2592,7 +3293,9 @@
 
     applyTheme(prefState.theme);
     hydrateCalculator();
+    hydrateProfile();
     hydrateRecordControls();
+    hydrateDashboardPanels();
     resetRecordForm();
     renderAll();
 
@@ -2615,6 +3318,13 @@
         convertConverterUnit(previousUnit, button.dataset.unit);
         saveCalc();
       });
+    });
+    els.distanceUnit.addEventListener("click", () => {
+      const previousUnit = calcState.unit;
+      const nextUnit = calcState.unit === "km" ? "mi" : "km";
+      convertCalcUnit(nextUnit);
+      convertConverterUnit(previousUnit, nextUnit);
+      saveCalc();
     });
 
     els.themeToggle.addEventListener("click", () => {
@@ -2653,6 +3363,15 @@
     els.converterSpeed.addEventListener("input", updateConverterFromSpeed);
     els.clearConverterButton.addEventListener("click", clearConverter);
 
+    [els.profileName, els.profileAge, els.profileGoal].forEach((input) => {
+      input.addEventListener("input", () => {
+        profileState.name = els.profileName.value;
+        profileState.age = els.profileAge.value;
+        profileState.goal = els.profileGoal.value;
+        saveProfile();
+      });
+    });
+
     els.recordUnit.addEventListener("change", () => {
       updateRecordPace();
     });
@@ -2661,10 +3380,12 @@
     });
     els.recordForm.addEventListener("submit", saveRecordFromForm);
     els.newRecordButton.addEventListener("click", resetRecordForm);
-    els.parseTextButton.addEventListener("click", () => applyParsedText(els.ocrText.value));
     els.backupButton.addEventListener("click", exportBackup);
     els.importInput.addEventListener("change", importBackup);
     els.exportButton.addEventListener("click", exportCsv);
+    els.collapseToggles.forEach((button) => {
+      button.addEventListener("click", () => toggleDashboardPanel(button.dataset.collapseToggle));
+    });
     els.recordSearch.addEventListener("input", () => {
       prefState.search = els.recordSearch.value;
       savePrefs();
@@ -2682,6 +3403,11 @@
     });
     els.recordSort.addEventListener("change", () => {
       prefState.sort = els.recordSort.value;
+      savePrefs();
+      renderRecords();
+    });
+    els.recordLimit.addEventListener("change", () => {
+      prefState.recordLimit = els.recordLimit.value;
       savePrefs();
       renderRecords();
     });
@@ -2757,6 +3483,11 @@
       saveJson(PREF_STORAGE_KEY, prefState);
     }
 
+    function saveProfile() {
+      saveJson(PROFILE_STORAGE_KEY, profileState);
+      renderProfile();
+    }
+
     function applyTheme(theme) {
       const activeTheme = theme === "dark" ? "dark" : "light";
       prefState.theme = activeTheme;
@@ -2793,6 +3524,96 @@
       els.recordSurfaceFilter.value = prefState.surfaceFilter || "all";
       els.recordRangeFilter.value = prefState.rangeFilter || "all";
       els.recordSort.value = prefState.sort || "date-desc";
+      els.recordLimit.value = recordLimitValue();
+    }
+
+    function hydrateDashboardPanels() {
+      prefState.dashboardOpen = { ...DEFAULT_PREF_STATE.dashboardOpen, ...(prefState.dashboardOpen || {}) };
+      els.collapseToggles.forEach((button) => {
+        const key = button.dataset.collapseToggle;
+        setDashboardPanel(key, prefState.dashboardOpen[key] !== false, false);
+      });
+    }
+
+    function toggleDashboardPanel(key) {
+      const isOpen = prefState.dashboardOpen?.[key] !== false;
+      setDashboardPanel(key, !isOpen, true);
+    }
+
+    function setDashboardPanel(key, isOpen, persist = true) {
+      if (!key) return;
+      prefState.dashboardOpen = { ...DEFAULT_PREF_STATE.dashboardOpen, ...(prefState.dashboardOpen || {}) };
+      prefState.dashboardOpen[key] = Boolean(isOpen);
+      const button = document.querySelector(`[data-collapse-toggle="${key}"]`);
+      const body = document.querySelector(`[data-collapse-body="${key}"]`);
+      const panel = button?.closest(".collapsible-panel")
+        || body?.closest(".collapsible-panel");
+      panel?.classList.toggle("is-collapsed", !isOpen);
+      if (button) {
+        button.setAttribute("aria-expanded", String(isOpen));
+        const state = button.querySelector("[data-collapse-state]");
+        if (state) state.textContent = isOpen ? "收合" : "展開";
+      }
+      if (body) {
+        body.setAttribute("aria-hidden", String(!isOpen));
+        if (persist && !motionQuery.matches) {
+          animateCollapseBody(body, isOpen);
+        } else {
+          body.hidden = !isOpen;
+          body.classList.remove("is-animating");
+          body.style.height = "";
+          body.style.opacity = "";
+          body.style.transform = "";
+        }
+      }
+      if (persist) savePrefs();
+    }
+
+    function animateCollapseBody(body, isOpen) {
+      body.classList.remove("is-animating");
+      body.style.overflow = "hidden";
+      body.style.height = "";
+      body.style.opacity = "";
+      body.style.transform = "";
+
+      if (isOpen) {
+        body.hidden = false;
+        body.style.height = "0px";
+        body.style.opacity = "0";
+        body.style.transform = "translateY(-4px)";
+        body.getBoundingClientRect();
+        body.classList.add("is-animating");
+        body.style.height = `${body.scrollHeight}px`;
+        body.style.opacity = "1";
+        body.style.transform = "translateY(0)";
+      } else {
+        body.style.height = `${body.scrollHeight}px`;
+        body.style.opacity = "1";
+        body.style.transform = "translateY(0)";
+        body.getBoundingClientRect();
+        body.classList.add("is-animating");
+        body.style.height = "0px";
+        body.style.opacity = "0";
+        body.style.transform = "translateY(-4px)";
+      }
+
+      const finish = (event) => {
+        if (event.propertyName !== "height") return;
+        body.removeEventListener("transitionend", finish);
+        body.classList.remove("is-animating");
+        body.style.overflow = "";
+        body.style.height = "";
+        body.style.opacity = "";
+        body.style.transform = "";
+        if (!isOpen) body.hidden = true;
+      };
+      body.addEventListener("transitionend", finish);
+    }
+
+    function hydrateProfile() {
+      els.profileName.value = profileState.name || "";
+      els.profileAge.value = profileState.age || "";
+      els.profileGoal.value = profileState.goal || "";
     }
 
     function shiftCalendarMonth(delta) {
@@ -2825,8 +3646,26 @@
     }
 
     function renderAll() {
+      renderProfile();
       renderCalculator();
       renderRecords();
+    }
+
+    function renderProfile() {
+      const totalKm = records.reduce((sum, record) => sum + toKm(record.distance || 0, record.unit), 0);
+      const level = currentTotalLevel(totalKm);
+      const progress = totalLevelProgress(totalKm, level);
+      const displayName = String(profileState.name || "").trim() || "Runner";
+      const initial = [...displayName][0]?.toUpperCase() || "R";
+      els.profileAvatar.textContent = initial;
+      els.profileLevelName.textContent = level.title;
+      els.profileTotalKm.textContent = formatKm(totalKm);
+      els.profileNextLevel.textContent = level.end
+        ? `距離下一級還差 ${formatKm(Math.max(0, level.end - totalKm))}`
+        : "已達最高累積等級";
+      els.profileCard.style.setProperty("--level-color", level.color);
+      els.profileCard.style.setProperty("--profile-progress", `${Math.round(progress * 100)}%`);
+      els.profileLevelFill.style.setProperty("--profile-progress", `${Math.round(progress * 100)}%`);
     }
 
     function renderCalculator() {
@@ -3208,7 +4047,6 @@
       els.recordTitle.value = "跑步";
       els.recordSurface.value = "outdoor";
       els.recordUnit.value = calcState.unit;
-      els.ocrText.value = "";
       els.recordFormTitle.textContent = "新增紀錄";
       els.saveRecordButton.lastChild.textContent = " 儲存紀錄";
     }
@@ -3234,6 +4072,7 @@
         return;
       }
 
+      const unlockedBefore = unlockedAchievementIds(records);
       const record = {
         id: editingRecordId || makeId(),
         date: els.recordDate.value,
@@ -3284,8 +4123,13 @@
         pendingNewRecordId = null;
         return;
       }
+      const newAchievements = newlyUnlockedAchievements(unlockedBefore, records);
       resetRecordForm();
-      showToast("已儲存紀錄");
+      if (newAchievements.length) {
+        showAchievementToast(newAchievements);
+      } else {
+        showToast("已儲存紀錄");
+      }
     }
 
     function applyParsedText(text) {
@@ -3544,12 +4388,15 @@
     }
 
     function renderRecords() {
+      renderProfile();
       renderSummary();
       renderInsights();
+      renderAchievements();
       renderCalendar();
       const visibleRecords = getVisibleRecords();
-      renderRecordCount(visibleRecords);
-      renderRecordList(visibleRecords);
+      const displayedRecords = limitVisibleRecords(visibleRecords);
+      renderRecordCount(displayedRecords, visibleRecords);
+      renderRecordList(displayedRecords);
     }
 
     function renderSummary() {
@@ -3684,6 +4531,577 @@
       bindChartTooltips();
     }
 
+    function renderAchievements() {
+      const state = buildAchievementState(records);
+      const total = state.total || 0;
+      const percent = total ? Math.round((state.unlocked / total) * 100) : 0;
+      if (!state.categories.some((category) => category.id === activeAchievementCategory)) {
+        activeAchievementCategory = state.categories[0]?.id || "";
+      }
+
+      els.achievementTotal.textContent = `${state.unlocked} / ${total}`;
+      els.achievementPercent.textContent = `${percent}%`;
+      els.achievementProgressFill.style.setProperty("--progress", `${percent}%`);
+      els.achievementTabs.innerHTML = "";
+
+      state.categories.forEach((category) => {
+        const categoryPercent = category.total ? Math.round((category.unlocked / category.total) * 100) : 0;
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = `achievement-tab${category.id === activeAchievementCategory ? " active" : ""}`;
+        button.dataset.achievementCategory = category.id;
+        const categoryName = category.icon ? `${escapeHtml(category.icon)} ${escapeHtml(category.name)}` : escapeHtml(category.name);
+        button.innerHTML = `
+          <div class="achievement-card-main">
+            <span class="achievement-card-name">${categoryName}</span>
+            <span class="achievement-card-count">${category.unlocked}/${category.total}</span>
+          </div>
+          <div class="achievement-card-label">${escapeHtml(category.nextLabel)}</div>
+          <div class="achievement-card-bar" aria-hidden="true"><span style="--progress: ${categoryPercent}%"></span></div>
+        `;
+        button.addEventListener("click", () => {
+          activeAchievementCategory = category.id;
+          renderAchievements();
+        });
+        els.achievementTabs.appendChild(button);
+      });
+
+      const activeCategory = state.categories.find((category) => category.id === activeAchievementCategory) || state.categories[0];
+      const compactList = activeCategory && !["pb", "hidden"].includes(activeCategory.id);
+      els.achievementList.className = `achievement-list ${compactList ? "achievement-list-compact" : `achievement-list-${activeCategory?.id || "empty"}`}`;
+      els.achievementList.innerHTML = activeCategory
+        ? activeCategory.items.map((item) => renderAchievementItem(item, activeCategory.id)).join("")
+        : "";
+    }
+
+    function renderAchievementItem(item, categoryId = "") {
+      const progress = Math.round(item.progress * 100);
+      const isHiddenLocked = categoryId === "hidden" && !item.unlocked;
+      const earnedLabel = item.unlocked && item.achievedAt
+        ? `<div class="achievement-item-earned">達成：${escapeHtml(formatAchievementDate(item.achievedAt))}</div>`
+        : "";
+      const compactClass = categoryId && !["pb", "hidden"].includes(categoryId) ? " compact" : "";
+      const hiddenClass = isHiddenLocked ? " hidden-locked" : "";
+      const colorStyle = item.color ? ` style="--achievement-color: ${escapeHtml(item.color)}"` : "";
+      const title = item.title;
+      const description = isHiddenLocked ? `提示：${item.hint || "完成某個特別條件"}` : item.description;
+      const progressText = isHiddenLocked ? "尚未解鎖" : item.progressText;
+      const progressValue = isHiddenLocked ? 0 : progress;
+      return `
+        <div class="achievement-item${item.unlocked ? " unlocked" : ""}${compactClass}${hiddenClass}"${colorStyle}>
+          <div class="achievement-mark" aria-hidden="true">${item.unlocked ? "✓" : escapeHtml(isHiddenLocked ? "?" : item.icon)}</div>
+          <div>
+            <div class="achievement-item-title">${escapeHtml(title)}</div>
+            <div class="achievement-item-desc">${escapeHtml(description)}</div>
+            ${earnedLabel}
+            <div class="achievement-item-footer">
+              <div class="achievement-item-meta">${escapeHtml(progressText)}</div>
+              <div class="achievement-item-bar" aria-hidden="true"><span style="--progress: ${progressValue}%"></span></div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function buildAchievementState(source = records) {
+      const metrics = achievementMetrics(source);
+      const distanceTargets = [
+        ["3k", "3 公里達成", 3],
+        ["5k", "5 公里達成", 5],
+        ["10k", "10 公里達成", 10],
+        ["15k", "15 公里達成", 15],
+        ["half", "半程馬拉松", 21.0975],
+        ["25k", "25 公里達成", 25],
+        ["30k", "30 公里達成", 30],
+        ["full", "全程馬拉松", 42.195],
+        ["50k", "50 公里超長距離", 50],
+        ["100k", "100 公里傳說", 100]
+      ];
+      const totalLevels = totalLevelDefinitions();
+      const categories = [
+        achievementCategory("distance", "距離", "🏃", distanceTargets.map(([slug, title, target]) =>
+          kmAchievement(`single-${slug}`, title, `單次跑步完成 ${formatAchievementKm(target)} km`, target, metrics.maxDistanceKm, firstSingleDistanceDate(source, target))
+        )),
+        achievementCategory("total", "累積等級", "📈", totalLevels.map((level) =>
+          levelAchievement(level.id, level.title, level.description, level.start, level.end, metrics.totalKm, level.start === 0 ? metrics.firstRecordDate : cumulativeDistanceDate(source, level.start), level.color)
+        )),
+        achievementCategory("count", "次數", "✅", [1, 10, 25, 50, 100, 365].map((target) =>
+          countAchievement(`runs-${target}`, target === 1 ? "第一筆紀錄" : `${target} 次跑步`, target === 1 ? "建立第一筆跑步紀錄" : `累積完成 ${target} 次跑步`, target, metrics.count, "次", nthRecordDate(source, target))
+        )),
+        achievementCategory("streak", "連續", "🔥", [3, 7, 14, 30, 100, 365].map((target) =>
+          countAchievement(`streak-${target}`, `連續 ${target} 天`, `最長連續跑步達到 ${target} 天`, target, metrics.longestStreak, "天", streakAchievementDate(source, target))
+        )),
+        achievementCategory("pace", "配速", "⚡", [
+          paceAchievement("pace-800", "跑進 8:00/km", 480, metrics.fastestPace, firstPaceDate(source, 480)),
+          paceAchievement("pace-700", "跑進 7:00/km", 420, metrics.fastestPace, firstPaceDate(source, 420)),
+          paceAchievement("pace-630", "跑進 6:30/km", 390, metrics.fastestPace, firstPaceDate(source, 390)),
+          paceAchievement("pace-600", "跑進 6:00/km", 360, metrics.fastestPace, firstPaceDate(source, 360)),
+          paceAchievement("pace-530", "跑進 5:30/km", 330, metrics.fastestPace, firstPaceDate(source, 330)),
+          paceAchievement("pace-500", "跑進 5:00/km", 300, metrics.fastestPace, firstPaceDate(source, 300)),
+          paceAchievement("pace-400", "跑進 4:00/km", 240, metrics.fastestPace, firstPaceDate(source, 240)),
+          paceAchievement("pace-300", "跑進 3:00/km", 180, metrics.fastestPace, firstPaceDate(source, 180))
+        ]),
+        achievementCategory("challenge", "挑戰", "📅", [
+          ...[30, 50, 100, 200].map((target) => kmAchievement(`month-${target}`, `本月 ${target} km`, `本月累積跑量達到 ${target} km`, target, metrics.monthKm, cumulativeDistanceDate(source, target, metrics.monthStart, metrics.todayEnd))),
+          ...[100, 300, 500, 1000].map((target) => kmAchievement(`year-${target}`, `本年 ${target} km`, `今年累積跑量達到 ${target} km`, target, metrics.yearKm, cumulativeDistanceDate(source, target, metrics.yearStart, metrics.todayEnd)))
+        ]),
+        achievementCategory("endurance", "耐力", "⏱", [
+          durationAchievement("duration-30", "跑超過 30 分鐘", 1800, metrics.longestDuration, firstDurationDate(source, 1800)),
+          durationAchievement("duration-60", "跑超過 60 分鐘", 3600, metrics.longestDuration, firstDurationDate(source, 3600)),
+          durationAchievement("duration-90", "跑超過 90 分鐘", 5400, metrics.longestDuration, firstDurationDate(source, 5400)),
+          durationAchievement("duration-120", "跑超過 2 小時", 7200, metrics.longestDuration, firstDurationDate(source, 7200)),
+          durationAchievement("duration-180", "跑超過 3 小時", 10800, metrics.longestDuration, firstDurationDate(source, 10800)),
+          durationAchievement("duration-300", "跑超過 5 小時", 18000, metrics.longestDuration, firstDurationDate(source, 18000))
+        ]),
+        achievementCategory("pb", "最佳", "🏅", [
+          recordAchievement("pb-fastest", "最快配速", "所有紀錄中平均配速最快的一次", metrics.fastestRecord, metrics.fastestRecord ? `最快 ${formatPace(pacePerKm(metrics.fastestRecord))} /km` : "尚無可計算配速"),
+          recordAchievement("pb-longest", "最長距離", "所有紀錄中距離最遠的一次跑步", metrics.longestDistanceRecord, metrics.longestDistanceRecord ? `最遠 ${formatKm(toKm(metrics.longestDistanceRecord.distance, metrics.longestDistanceRecord.unit))}` : "尚無紀錄"),
+          recordAchievement("pb-duration", "最長時間", "所有紀錄中持續最久的一次跑步", metrics.longestDurationRecord, metrics.longestDurationRecord ? `最久 ${formatDuration(metrics.longestDurationRecord.durationSeconds)}` : "尚無紀錄")
+        ])
+      ];
+      const hiddenBase = hiddenAchievementItems(source);
+      const requiredForCompletion = [...categories.flatMap((category) => category.items), ...hiddenBase];
+      const unlockedRequired = requiredForCompletion.filter((item) => item.unlocked).length;
+      const hiddenCompletion = fixedAchievement(
+        "hidden-all-achievements",
+        "終局收藏家",
+        "解鎖所有其他成就",
+        requiredForCompletion.length > 0 && unlockedRequired === requiredForCompletion.length,
+        requiredForCompletion.length ? unlockedRequired / requiredForCompletion.length : 0,
+        `${unlockedRequired} / ${requiredForCompletion.length} 已解鎖`,
+        unlockedRequired === requiredForCompletion.length ? latestAchievementDate(requiredForCompletion) : ""
+      );
+      hiddenCompletion.color = "#7F1D1D";
+      hiddenCompletion.hint = "把空格一個一個點亮";
+      categories.push(achievementCategory("hidden", "隱藏成就", "", [...hiddenBase, hiddenCompletion]));
+
+      categories.forEach((category) => {
+        category.total = category.items.length;
+        category.unlocked = category.items.filter((item) => item.unlocked).length;
+        category.nextLabel = nextAchievementLabel(category);
+      });
+      const total = categories.reduce((sum, category) => sum + category.total, 0);
+      const unlocked = categories.reduce((sum, category) => sum + category.unlocked, 0);
+      return { categories, total, unlocked };
+    }
+
+    function achievementCategory(id, name, icon, items) {
+      return {
+        id,
+        name,
+        icon,
+        items: items.map((item) => ({ ...item, categoryId: id }))
+      };
+    }
+
+    function nextAchievementLabel(category) {
+      const next = category.items.find((item) => !item.unlocked);
+      if (next && category.id === "hidden") return "下一個：隱藏成就";
+      return next ? `下一個：${next.title}` : "本類完成";
+    }
+
+    function kmAchievement(id, title, description, target, current, achievedAt = "") {
+      const value = Math.max(0, Number(current) || 0);
+      const progress = Math.min(1, value / target);
+      return {
+        id,
+        title,
+        description,
+        icon: "◇",
+        unlocked: value >= target,
+        progress,
+        progressText: `${formatAchievementKm(Math.min(value, target))} / ${formatAchievementKm(target)} km`,
+        achievedAt
+      };
+    }
+
+    function totalLevelDefinitions() {
+      return [
+        { id: "level-1", title: "Lv.1 火花起跑", description: "累積里程 0-50 km", start: 0, end: 50, color: "#FACC15" },
+        { id: "level-2", title: "Lv.2 黃焰熱身", description: "累積里程 50-250 km", start: 50, end: 250, color: "#F59E0B" },
+        { id: "level-3", title: "Lv.3 橘焰推進", description: "累積里程 250-1000 km", start: 250, end: 1000, color: "#F97316" },
+        { id: "level-4", title: "Lv.4 烈焰巡航", description: "累積里程 1000-2500 km", start: 1000, end: 2500, color: "#FB6B21" },
+        { id: "level-5", title: "Lv.5 赤焰長征", description: "累積里程 2500-5000 km", start: 2500, end: 5000, color: "#EF4444" },
+        { id: "level-6", title: "Lv.6 熔岩耐力", description: "累積里程 5000-15000 km", start: 5000, end: 15000, color: "#DC2626" },
+        { id: "level-7", title: "Lv.7 紅線遠征", description: "累積里程 15000-50000 km", start: 15000, end: 50000, color: "#B91C1C" },
+        { id: "level-8", title: "Lv.8 太陽核心", description: "累積里程 50000 km 以上", start: 50000, end: null, color: "#7F1D1D" }
+      ];
+    }
+
+    function currentTotalLevel(totalKm) {
+      const value = Math.max(0, Number(totalKm) || 0);
+      return totalLevelDefinitions().find((level) => value >= level.start && (level.end == null || value < level.end))
+        || totalLevelDefinitions().at(-1);
+    }
+
+    function totalLevelProgress(totalKm, level) {
+      const value = Math.max(0, Number(totalKm) || 0);
+      if (!level?.end) return 1;
+      return Math.min(1, Math.max(0, (value - level.start) / (level.end - level.start)));
+    }
+
+    function levelAchievement(id, title, description, start, end, current, achievedAt = "", color = "") {
+      const value = Math.max(0, Number(current) || 0);
+      const target = start || end || 1;
+      const unlocked = start === 0 ? value > 0 : value >= start;
+      const progress = end
+        ? Math.min(1, Math.max(0, value - start) / (end - start))
+        : Math.min(1, value / start);
+      const currentInRange = end
+        ? Math.min(Math.max(value, start), end)
+        : value;
+      const progressText = !unlocked && start > 0
+        ? `${formatAchievementKm(Math.min(value, start))} / ${formatAchievementKm(start)} km`
+        : end
+          ? `${formatAchievementKm(currentInRange)} / ${formatAchievementKm(end)} km`
+          : `${formatAchievementKm(value)} km+`;
+      return {
+        id,
+        title,
+        description,
+        icon: "◇",
+        unlocked,
+        progress: unlocked ? progress : Math.min(1, value / target),
+        progressText,
+        achievedAt: unlocked ? achievedAt : "",
+        color
+      };
+    }
+
+    function countAchievement(id, title, description, target, current, unit = "次", achievedAt = "") {
+      const value = Math.max(0, Number(current) || 0);
+      return {
+        id,
+        title,
+        description,
+        icon: "◇",
+        unlocked: value >= target,
+        progress: Math.min(1, value / target),
+        progressText: `${Math.min(value, target)} / ${target} ${unit}`,
+        achievedAt
+      };
+    }
+
+    function paceAchievement(id, title, targetSeconds, fastestSeconds, achievedAt = "") {
+      const hasPace = Number.isFinite(fastestSeconds) && fastestSeconds > 0;
+      const unlocked = hasPace && fastestSeconds <= targetSeconds;
+      const progress = hasPace ? Math.min(1, targetSeconds / fastestSeconds) : 0;
+      return {
+        id,
+        title,
+        description: `平均配速達到 ${formatPace(targetSeconds)} /km`,
+        icon: "◇",
+        unlocked,
+        progress,
+        progressText: hasPace ? `最佳 ${formatPace(fastestSeconds)} /km` : `目標 ${formatPace(targetSeconds)} /km`,
+        achievedAt
+      };
+    }
+
+    function durationAchievement(id, title, targetSeconds, longestSeconds, achievedAt = "") {
+      const current = Math.max(0, Number(longestSeconds) || 0);
+      return {
+        id,
+        title,
+        description: `單次跑步時間達到 ${formatDuration(targetSeconds)}`,
+        icon: "◇",
+        unlocked: current >= targetSeconds,
+        progress: Math.min(1, current / targetSeconds),
+        progressText: `${formatDuration(Math.min(current, targetSeconds))} / ${formatDuration(targetSeconds)}`,
+        achievedAt
+      };
+    }
+
+    function recordAchievement(id, title, description, record, progressText) {
+      return {
+        id,
+        title,
+        description,
+        icon: "◇",
+        unlocked: Boolean(record),
+        progress: record ? 1 : 0,
+        progressText,
+        achievedAt: record?.date || ""
+      };
+    }
+
+    function hiddenAchievementItems(source) {
+      return [
+        hiddenRecordAchievement(
+          "hidden-cold-run",
+          "寒鋒跑者",
+          "單次跑步氣溫低於 10°C",
+          "不想跑的天氣，更要出門",
+          source,
+          (record) => numericOptional(record.weather?.temperature) < 10,
+          (record) => `氣溫 ${record.weather?.temperature}°C`
+        ),
+        hiddenRecordAchievement(
+          "hidden-wind-run",
+          "逆風破陣",
+          "單次跑步風速大於 50",
+          "阻力越大，越適合正面穿過",
+          source,
+          (record) => numericOptional(record.weather?.windSpeed) > 50,
+          (record) => `風速 ${record.weather?.windSpeed}`
+        ),
+        hiddenRecordAchievement(
+          "hidden-max-hr",
+          "紅線心跳",
+          "單次跑步最大心率超過 190 bpm",
+          "偶爾聽見引擎逼近極限",
+          source,
+          (record) => numericOptional(getMaxHeartRate(record)) > 190,
+          (record) => `最大心率 ${getMaxHeartRate(record)} bpm`
+        ),
+        hiddenRecordAchievement(
+          "hidden-zone-two",
+          "靜流巡航",
+          "單次跑步心率 Z2 占比超過 70%",
+          "把節奏壓住，讓時間自己堆起來",
+          source,
+          (record) => numericOptional(record.heartRateZones?.[1]) > 70,
+          (record) => `Z2 ${record.heartRateZones?.[1]}%`
+        )
+      ];
+    }
+
+    function hiddenRecordAchievement(id, title, description, hint, source, predicate, progressTextForRecord) {
+      const record = firstRecordMatching(source, predicate);
+      const item = fixedAchievement(
+        id,
+        title,
+        description,
+        Boolean(record),
+        record ? 1 : 0,
+        record ? progressTextForRecord(record) : "隱藏條件",
+        record?.date || ""
+      );
+      item.icon = "?";
+      item.color = "#7F1D1D";
+      item.hint = hint;
+      return item;
+    }
+
+    function firstRecordMatching(source, predicate) {
+      return chronologicalRecords(source).find((record) => {
+        try {
+          return predicate(record);
+        } catch {
+          return false;
+        }
+      }) || null;
+    }
+
+    function numericOptional(value) {
+      if (value === "" || value == null) return NaN;
+      const numeric = Number(value);
+      return Number.isFinite(numeric) ? numeric : NaN;
+    }
+
+    function latestAchievementDate(items) {
+      return items
+        .map((item) => item.achievedAt)
+        .filter(Boolean)
+        .sort()
+        .at(-1) || "";
+    }
+
+    function formatAchievementKm(value) {
+      const numeric = Number(value) || 0;
+      if (Number.isInteger(numeric)) return String(numeric);
+      return formatDistance(numeric).replace(/\.00$/, "").replace(/\.0$/, "");
+    }
+
+    function formatAchievementDate(value) {
+      const date = parseIsoDate(value);
+      return date ? `${date.getFullYear()}/${String(date.getMonth() + 1).padStart(2, "0")}/${String(date.getDate()).padStart(2, "0")}` : String(value || "");
+    }
+
+    function fixedAchievement(id, title, description, unlocked, progress, progressText, achievedAt = "") {
+      return {
+        id,
+        title,
+        description,
+        icon: "◇",
+        unlocked,
+        progress: Math.min(1, Math.max(0, progress)),
+        progressText,
+        achievedAt
+      };
+    }
+
+    function achievementMetrics(source = records) {
+      const today = new Date();
+      const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+      const yearStart = new Date(today.getFullYear(), 0, 1);
+      const todayEnd = endOfDay(today);
+      const monthStats = statsForRecordList(source, monthStart, todayEnd);
+      const yearStats = statsForRecordList(source, yearStart, todayEnd);
+      const distances = source.map((record) => toKm(record.distance || 0, record.unit));
+      const paces = source.map(pacePerKm).filter((pace) => pace > 0);
+      const streak = streakForRecords(source);
+      const sorted = chronologicalRecords(source);
+      const fastestRecord = bestRecordFromSource(source, (record) => {
+        const pace = pacePerKm(record);
+        return pace > 0 ? pace : Infinity;
+      }, "min");
+      const longestDistanceRecord = bestRecordFromSource(source, (record) => toKm(record.distance || 0, record.unit), "max");
+      const longestDurationRecord = bestRecordFromSource(source, (record) => record.durationSeconds || 0, "max");
+      return {
+        count: source.length,
+        totalKm: distances.reduce((sum, value) => sum + value, 0),
+        maxDistanceKm: Math.max(0, ...distances),
+        fastestPace: paces.length ? Math.min(...paces) : 0,
+        longestDuration: Math.max(0, ...source.map((record) => record.durationSeconds || 0)),
+        longestStreak: streak.longest,
+        monthKm: monthStats.km,
+        yearKm: yearStats.km,
+        monthStart,
+        yearStart,
+        todayEnd,
+        firstRecordDate: sorted[0]?.date || "",
+        fastestRecord,
+        longestDistanceRecord,
+        longestDurationRecord
+      };
+    }
+
+    function chronologicalRecords(source = records) {
+      return [...source]
+        .map((record, index) => ({ record, index, date: parseIsoDate(record.date) }))
+        .filter((entry) => entry.date)
+        .sort((a, b) => a.date - b.date || a.index - b.index)
+        .map((entry) => entry.record);
+    }
+
+    function firstSingleDistanceDate(source, targetKm) {
+      return chronologicalRecords(source).find((record) => toKm(record.distance || 0, record.unit) >= targetKm)?.date || "";
+    }
+
+    function cumulativeDistanceDate(source, targetKm, start = null, end = null) {
+      let total = 0;
+      for (const record of chronologicalRecords(source)) {
+        const date = parseIsoDate(record.date);
+        if (!date || (start && date < start) || (end && date > end)) continue;
+        total += toKm(record.distance || 0, record.unit);
+        if (total >= targetKm) return record.date;
+      }
+      return "";
+    }
+
+    function nthRecordDate(source, target) {
+      return chronologicalRecords(source)[target - 1]?.date || "";
+    }
+
+    function firstPaceDate(source, targetSeconds) {
+      return chronologicalRecords(source).find((record) => {
+        const pace = pacePerKm(record);
+        return pace > 0 && pace <= targetSeconds;
+      })?.date || "";
+    }
+
+    function firstDurationDate(source, targetSeconds) {
+      return chronologicalRecords(source).find((record) => (record.durationSeconds || 0) >= targetSeconds)?.date || "";
+    }
+
+    function streakAchievementDate(source, target) {
+      const dates = [...new Set(source.map((record) => record.date).filter(Boolean))].sort();
+      let run = 0;
+      let previous = null;
+      for (const value of dates) {
+        const current = parseIsoDate(value);
+        if (!current) continue;
+        run = previous && (current - previous) / 86400000 === 1 ? run + 1 : 1;
+        if (run >= target) return value;
+        previous = current;
+      }
+      return "";
+    }
+
+    function bestRecordFromSource(source, scoreFn, direction) {
+      let best = null;
+      let bestScore = direction === "max" ? -Infinity : Infinity;
+      source.forEach((record) => {
+        const score = scoreFn(record);
+        if (!Number.isFinite(score)) return;
+        if (direction === "max" ? score > bestScore : score < bestScore) {
+          best = record;
+          bestScore = score;
+        }
+      });
+      return best;
+    }
+
+    function statsForRecordList(source, start, end) {
+      return source.reduce((stats, record) => {
+        const date = parseIsoDate(record.date);
+        if (!date || date < start || date > end) return stats;
+        stats.km += toKm(record.distance || 0, record.unit);
+        stats.seconds += record.durationSeconds || 0;
+        stats.count += 1;
+        return stats;
+      }, { km: 0, seconds: 0, count: 0 });
+    }
+
+    function streakForRecords(source) {
+      const dates = [...new Set(source.map((record) => record.date).filter(Boolean))].sort();
+      if (!dates.length) return { current: 0, longest: 0, lastDate: "" };
+
+      let longest = 1;
+      let run = 1;
+      for (let index = 1; index < dates.length; index += 1) {
+        const previous = parseIsoDate(dates[index - 1]);
+        const current = parseIsoDate(dates[index]);
+        const diff = (current - previous) / 86400000;
+        run = diff === 1 ? run + 1 : 1;
+        longest = Math.max(longest, run);
+      }
+
+      let currentStreakDays = 1;
+      for (let index = dates.length - 1; index > 0; index -= 1) {
+        const current = parseIsoDate(dates[index]);
+        const previous = parseIsoDate(dates[index - 1]);
+        if ((current - previous) / 86400000 !== 1) break;
+        currentStreakDays += 1;
+      }
+
+      const today = parseIsoDate(todayIso());
+      const last = parseIsoDate(dates.at(-1));
+      const daysSinceLast = Math.round((today - last) / 86400000);
+      if (daysSinceLast > 1) currentStreakDays = 0;
+      return { current: currentStreakDays, longest, lastDate: dates.at(-1) };
+    }
+
+    function unlockedAchievementIds(source = records) {
+      return new Set(flatAchievements(source).filter((item) => item.unlocked).map((item) => item.id));
+    }
+
+    function newlyUnlockedAchievements(previousIds, source = records) {
+      return flatAchievements(source).filter((item) => item.unlocked && !previousIds.has(item.id));
+    }
+
+    function flatAchievements(source = records) {
+      return buildAchievementState(source).categories.flatMap((category) => category.items);
+    }
+
+    function showAchievementToast(unlocks) {
+      const first = unlocks[0];
+      const suffix = unlocks.length > 1 ? `，另有 ${unlocks.length - 1} 個` : "";
+      pendingAchievementUnlocks = unlocks;
+      showToast(`新成就：${first.title}${suffix}`, {
+        actionLabel: "查看",
+        duration: 6800,
+        onAction: () => {
+          showView("records");
+          setDashboardPanel("achievements", true);
+          activeAchievementCategory = first.categoryId;
+          renderAchievements();
+          els.achievementsPanel.scrollIntoView({ behavior: motionQuery.matches ? "auto" : "smooth", block: "start" });
+        }
+      });
+    }
+
     function renderCalendar() {
       const month = monthDate(prefState.calendarMonth);
       prefState.calendarMonth = monthKey(month);
@@ -3759,8 +5177,18 @@
       day.addEventListener("animationend", () => day.classList.remove("calendar-press"), { once: true });
     }
 
-    function renderRecordCount(visibleRecords) {
-      els.recordCount.textContent = records.length ? `顯示 ${visibleRecords.length} / ${records.length} 筆` : "";
+    function recordLimitValue() {
+      return ["10", "30", "50", "all"].includes(prefState.recordLimit) ? prefState.recordLimit : "10";
+    }
+
+    function limitVisibleRecords(visibleRecords) {
+      const limit = recordLimitValue();
+      if (limit === "all") return visibleRecords;
+      return visibleRecords.slice(0, Number(limit));
+    }
+
+    function renderRecordCount(displayedRecords, visibleRecords) {
+      els.recordCount.textContent = records.length ? `顯示 ${displayedRecords.length} / ${visibleRecords.length} 筆` : "";
     }
 
     function renderRecordList(visibleRecords = getVisibleRecords()) {
