@@ -5242,6 +5242,12 @@
                     <path d="M6 7h12M10 11v6M14 11v6M9 7l1-2h4l1 2M8 7l1 13h6l1-13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                   </svg>
                 </button>
+                <button type="button" class="icon-button" data-share="${record.id}" aria-label="分享圖片" title="分享圖片">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="M8 12h8M12 8l4 4-4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M20 12v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                  </svg>
+                </button>
                 ${detailsButtonHtml}
               </div>
             </div>
@@ -5259,6 +5265,7 @@
 
           card.querySelector("[data-edit]").addEventListener("click", () => editRecord(record.id));
           card.querySelector("[data-delete]").addEventListener("click", () => deleteRecord(record.id));
+          card.querySelector("[data-share]").addEventListener("click", () => shareRecordImage(record.id));
           card.querySelector("[data-toggle-details]")?.addEventListener("click", (event) => {
             const panel = card.querySelector(".record-detail-panel");
             if (!panel) return;
@@ -5763,6 +5770,309 @@
       return Number(value.toFixed(2)).toString();
     }
 
+    async function shareRecordImage(id) {
+      const record = records.find((item) => item.id === id);
+      if (!record) return;
+
+      try {
+        showToast("正在產生分享圖", { duration: 900 });
+        const blob = await createRecordShareBlob(record);
+        const filename = `燃速誌-${record.date || todayIso()}-${safeFilenamePart(record.title)}.png`;
+        const file = typeof File === "function"
+          ? new File([blob], filename, { type: "image/png" })
+          : null;
+
+        if (file && navigator.canShare?.({ files: [file] })) {
+          try {
+            await navigator.share({
+              files: [file],
+              title: `燃速誌｜${record.title || "跑步紀錄"}`,
+              text: recordShareText(record)
+            });
+            showToast("已開啟分享");
+            return;
+          } catch (error) {
+            if (error?.name === "AbortError") {
+              showToast("已取消分享");
+              return;
+            }
+          }
+        }
+
+        downloadBlob(filename, blob);
+        showToast("已下載分享圖");
+      } catch (error) {
+        console.error(error);
+        showToast("分享圖片失敗");
+      }
+    }
+
+    async function createRecordShareBlob(record) {
+      const canvas = document.createElement("canvas");
+      canvas.width = 1080;
+      canvas.height = 1350;
+      const ctx = canvas.getContext("2d");
+      const width = canvas.width;
+      const height = canvas.height;
+      const averagePace = getAveragePaceSeconds(record);
+      const avgHeartRate = getAverageHeartRate(record);
+      const maxHeartRate = getMaxHeartRate(record);
+      const zones = normalizedZones(record.heartRateZones);
+      const hasZones = zones.some((value) => value !== "" && value != null);
+      const monthKm = recordMonthKm(record);
+      const title = String(record.title || "跑步").trim();
+
+      const bg = ctx.createLinearGradient(0, 0, width, height);
+      bg.addColorStop(0, "#111827");
+      bg.addColorStop(0.56, "#000000");
+      bg.addColorStop(1, "#18181B");
+      ctx.fillStyle = bg;
+      ctx.fillRect(0, 0, width, height);
+
+      ctx.save();
+      ctx.globalAlpha = 0.9;
+      const glow = ctx.createRadialGradient(900, 120, 40, 900, 120, 330);
+      glow.addColorStop(0, "#FACC15");
+      glow.addColorStop(0.42, "#F97316");
+      glow.addColorStop(1, "rgba(249, 115, 22, 0)");
+      ctx.fillStyle = glow;
+      ctx.beginPath();
+      ctx.arc(900, 120, 330, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+
+      fillCanvasRoundRect(ctx, 58, 72, 964, 1240, 42, "#fffdf8");
+      const stripe = ctx.createLinearGradient(70, 72, 1010, 72);
+      stripe.addColorStop(0, "#EF4444");
+      stripe.addColorStop(0.58, "#F97316");
+      stripe.addColorStop(1, "#FACC15");
+      fillCanvasRoundRect(ctx, 58, 72, 964, 16, 8, stripe);
+
+      drawCanvasText(ctx, "燃速誌", 100, 155, 46, 1000, "#111827");
+      drawCanvasText(ctx, "RUN SUMMARY", 100, 194, 22, 900, "#F97316");
+      ctx.textAlign = "right";
+      drawCanvasText(ctx, `${record.date || "--"}${formatSurface(record.surface) ? ` · ${formatSurface(record.surface)}` : ""}`, 980, 156, 28, 900, "#6B7280");
+      ctx.textAlign = "left";
+
+      let titleY = drawCanvasWrappedText(ctx, title, 100, 284, 840, 42, 2, {
+        fontSize: 40,
+        weight: 1000,
+        color: "#111827"
+      });
+      titleY = Math.max(titleY + 34, 320);
+
+      const distanceValue = formatDistance(record.distance || 0);
+      const distanceSize = fitCanvasFont(ctx, distanceValue, 560, 158, 92, 1000);
+      drawCanvasText(ctx, distanceValue, 100, titleY + 130, distanceSize, 1000, "#0F172A");
+      const distanceWidth = ctx.measureText(distanceValue).width;
+      drawCanvasText(ctx, record.unit || "km", 112 + distanceWidth, titleY + 116, 48, 1000, "#111827");
+      fillCanvasRoundRect(ctx, 100, titleY + 154, Math.min(390, distanceWidth + 98), 9, 6, "#F97316");
+
+      const statsY = titleY + 215;
+      drawShareMetric(ctx, 100, statsY, 420, 140, "時間", formatDuration(record.durationSeconds || 0));
+      drawShareMetric(ctx, 560, statsY, 420, 140, "平均配速", `${formatPace(averagePace)} /${record.unit || "km"}`);
+
+      const metricItems = [
+        avgHeartRate ? ["平均心率", `${avgHeartRate} bpm`] : null,
+        maxHeartRate ? ["最大心率", `${maxHeartRate} bpm`] : null,
+        record.calories ? ["卡路里", `${record.calories} 卡`] : null,
+        record.cadence ? ["步頻", record.cadence] : null,
+        monthKm > 0 ? ["本月累積", formatKm(monthKm)] : null,
+        formatSurface(record.surface) ? ["場地", formatSurface(record.surface)] : null
+      ].filter(Boolean).slice(0, 6);
+
+      const metricY = statsY + 178;
+      metricItems.forEach(([label, value], index) => {
+        const x = 100 + (index % 3) * 300;
+        const y = metricY + Math.floor(index / 3) * 112;
+        drawShareSmallMetric(ctx, x, y, 274, 88, label, value);
+      });
+
+      const zonesY = metricY + (metricItems.length > 3 ? 244 : 132);
+      if (hasZones) {
+        drawCanvasText(ctx, "心率區間", 100, zonesY, 28, 1000, "#111827");
+        drawShareZoneBars(ctx, 100, zonesY + 28, 880, 142, zones);
+      } else {
+        drawCanvasText(ctx, "心率區間", 100, zonesY, 28, 1000, "#111827");
+        drawCanvasText(ctx, "尚無心率區間資料", 100, zonesY + 52, 25, 850, "#6B7280");
+      }
+
+      const weatherItems = shareWeatherItems(record.weather);
+      const weatherY = hasZones ? zonesY + 190 : zonesY + 106;
+      if (weatherItems.length) {
+        drawCanvasText(ctx, "天氣", 100, weatherY, 28, 1000, "#111827");
+        weatherItems.forEach(([label, value], index) => {
+          const x = 100 + index * 220;
+          drawCanvasText(ctx, label, x, weatherY + 48, 22, 900, "#6B7280");
+          drawCanvasText(ctx, value, x, weatherY + 82, 30, 1000, "#111827");
+        });
+      }
+
+      fillCanvasRoundRect(ctx, 100, 1258, 880, 1, 1, "#E5E7EB");
+      drawCanvasText(ctx, "Generated by 燃速誌", 100, 1300, 24, 900, "#6B7280");
+      ctx.textAlign = "right";
+      drawCanvasText(ctx, "Keep running.", 980, 1300, 24, 900, "#F97316");
+      ctx.textAlign = "left";
+
+      return canvasToBlob(canvas);
+    }
+
+    function drawShareMetric(ctx, x, y, width, height, label, value) {
+      fillCanvasRoundRect(ctx, x, y, width, height, 22, "#FFF7ED");
+      fillCanvasRoundRect(ctx, x, y, 7, height, 4, "#F97316");
+      drawCanvasText(ctx, label, x + 28, y + 46, 24, 900, "#6B7280");
+      drawCanvasText(ctx, value, x + 28, y + 100, 44, 1000, "#111827");
+    }
+
+    function drawShareSmallMetric(ctx, x, y, width, height, label, value) {
+      fillCanvasRoundRect(ctx, x, y, width, height, 18, "#FFFFFF");
+      ctx.strokeStyle = "#E5E7EB";
+      ctx.lineWidth = 2;
+      strokeCanvasRoundRect(ctx, x, y, width, height, 18);
+      drawCanvasText(ctx, label, x + 22, y + 32, 21, 900, "#6B7280");
+      drawCanvasText(ctx, String(value), x + 22, y + 66, 30, 1000, "#111827", width - 44);
+    }
+
+    function drawShareZoneBars(ctx, x, y, width, height, zones) {
+      const colors = ["#4e9fca", "#42a66b", "#e1a739", "#df7646", "#cc4e5c"];
+      const gap = 22;
+      const itemWidth = (width - gap * 4) / 5;
+      zones.forEach((value, index) => {
+        const percent = value !== "" && value != null ? Math.min(100, Math.max(0, number(value))) : 0;
+        const barX = x + index * (itemWidth + gap);
+        const trackY = y + 10;
+        fillCanvasRoundRect(ctx, barX, trackY, itemWidth, 74, 12, "#ECECEC");
+        const fillHeight = Math.max(4, (74 * percent) / 100);
+        fillCanvasRoundRect(ctx, barX, trackY + 74 - fillHeight, itemWidth, fillHeight, 10, colors[index]);
+        ctx.textAlign = "center";
+        drawCanvasText(ctx, `Z${index + 1}`, barX + itemWidth / 2, y + 112, 22, 1000, "#111827");
+        drawCanvasText(ctx, percent ? `${formatCompactNumber(percent)}%` : "--", barX + itemWidth / 2, y + 140, 20, 900, "#6B7280");
+        ctx.textAlign = "left";
+      });
+    }
+
+    function shareWeatherItems(weather) {
+      if (!weather) return [];
+      return [
+        weather.temperature !== "" && weather.temperature != null ? ["氣溫", `${weather.temperature}°C`] : null,
+        weather.humidity !== "" && weather.humidity != null ? ["濕度", `${weather.humidity}%`] : null,
+        weather.windSpeed !== "" && weather.windSpeed != null ? ["風速", String(weather.windSpeed)] : null,
+        weather.windDirection ? ["風向", String(weather.windDirection)] : null
+      ].filter(Boolean);
+    }
+
+    function recordMonthKm(record) {
+      const date = parseIsoDate(record.date);
+      if (!date) return 0;
+      return records.reduce((sum, item) => {
+        const itemDate = parseIsoDate(item.date);
+        if (!itemDate) return sum;
+        if (itemDate.getFullYear() !== date.getFullYear() || itemDate.getMonth() !== date.getMonth()) return sum;
+        return sum + toKm(item.distance || 0, item.unit);
+      }, 0);
+    }
+
+    function recordShareText(record) {
+      return `${record.title || "跑步"}｜${formatDistance(record.distance || 0)} ${record.unit || "km"}｜${formatDuration(record.durationSeconds || 0)}｜${formatPace(getAveragePaceSeconds(record))}/${record.unit || "km"}｜燃速誌`;
+    }
+
+    function drawCanvasText(ctx, text, x, y, size, weight, color, maxWidth = undefined) {
+      ctx.font = shareCanvasFont(size, weight);
+      ctx.fillStyle = color;
+      ctx.textBaseline = "alphabetic";
+      ctx.fillText(String(text), x, y, maxWidth);
+    }
+
+    function drawCanvasWrappedText(ctx, text, x, y, maxWidth, lineHeight, maxLines, options) {
+      ctx.font = shareCanvasFont(options.fontSize, options.weight);
+      ctx.fillStyle = options.color;
+      const chars = Array.from(String(text || ""));
+      const lines = [];
+      let line = "";
+      chars.forEach((char) => {
+        const next = line + char;
+        if (ctx.measureText(next).width > maxWidth && line) {
+          lines.push(line);
+          line = char.trimStart();
+        } else {
+          line = next;
+        }
+      });
+      if (line) lines.push(line);
+
+      const visible = lines.slice(0, maxLines);
+      if (lines.length > maxLines) {
+        let last = visible[visible.length - 1];
+        while (last.length && ctx.measureText(`${last}...`).width > maxWidth) {
+          last = Array.from(last).slice(0, -1).join("");
+        }
+        visible[visible.length - 1] = `${last}...`;
+      }
+      visible.forEach((lineText, index) => ctx.fillText(lineText, x, y + index * lineHeight));
+      return y + (visible.length - 1) * lineHeight;
+    }
+
+    function fitCanvasFont(ctx, text, maxWidth, startSize, minSize, weight) {
+      let size = startSize;
+      while (size > minSize) {
+        ctx.font = shareCanvasFont(size, weight);
+        if (ctx.measureText(String(text)).width <= maxWidth) return size;
+        size -= 4;
+      }
+      return minSize;
+    }
+
+    function shareCanvasFont(size, weight = 900) {
+      return `${weight} ${size}px -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans TC", Arial, sans-serif`;
+    }
+
+    function fillCanvasRoundRect(ctx, x, y, width, height, radius, fillStyle) {
+      canvasRoundRectPath(ctx, x, y, width, height, radius);
+      ctx.fillStyle = fillStyle;
+      ctx.fill();
+    }
+
+    function strokeCanvasRoundRect(ctx, x, y, width, height, radius) {
+      canvasRoundRectPath(ctx, x, y, width, height, radius);
+      ctx.stroke();
+    }
+
+    function canvasRoundRectPath(ctx, x, y, width, height, radius) {
+      const r = Math.min(radius, width / 2, height / 2);
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.lineTo(x + width - r, y);
+      ctx.quadraticCurveTo(x + width, y, x + width, y + r);
+      ctx.lineTo(x + width, y + height - r);
+      ctx.quadraticCurveTo(x + width, y + height, x + width - r, y + height);
+      ctx.lineTo(x + r, y + height);
+      ctx.quadraticCurveTo(x, y + height, x, y + height - r);
+      ctx.lineTo(x, y + r);
+      ctx.quadraticCurveTo(x, y, x + r, y);
+      ctx.closePath();
+    }
+
+    function canvasToBlob(canvas) {
+      return new Promise((resolve, reject) => {
+        canvas.toBlob((blob) => {
+          if (blob) {
+            resolve(blob);
+            return;
+          }
+          reject(new Error("Canvas export failed."));
+        }, "image/png");
+      });
+    }
+
+    function safeFilenamePart(value) {
+      const text = String(value || "run")
+        .trim()
+        .replace(/[\\/:*?"<>|]+/g, "-")
+        .replace(/\s+/g, "-")
+        .slice(0, 32);
+      return text || "run";
+    }
+
     function editRecord(id) {
       const record = records.find((item) => item.id === id);
       if (!record) return;
@@ -5898,6 +6208,10 @@
 
     function downloadText(filename, text, type) {
       const blob = new Blob([text], { type });
+      downloadBlob(filename, blob);
+    }
+
+    function downloadBlob(filename, blob) {
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
