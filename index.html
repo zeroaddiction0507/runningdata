@@ -1,0 +1,4525 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#F5F7FA">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="配速紀錄">
+  <title>配速紀錄</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #F5F7FA;
+      --panel: #ffffff;
+      --ink: #111827;
+      --muted: #6B7280;
+      --line: #F0F2F5;
+      --track: #F97316;
+      --track-soft: #FFF7ED;
+      --sun: #FACC15;
+      --coral: #EF4444;
+      --sky: #0F172A;
+      --sky-soft: #F3F4F6;
+      --shadow: 0 16px 34px rgba(17, 24, 39, 0.1);
+      --radius: 8px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans TC", Roboto, Arial, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+    }
+
+    .theme-wipe {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      pointer-events: none;
+      background: var(--wipe-color);
+      opacity: 1;
+      animation: theme-wipe 520ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+      contain: paint;
+      will-change: opacity;
+    }
+
+    button,
+    input,
+    select,
+    textarea {
+      font: inherit;
+    }
+
+    button {
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .app {
+      width: min(100%, 860px);
+      margin: 0 auto;
+      padding: max(18px, env(safe-area-inset-top)) 16px max(28px, env(safe-area-inset-bottom));
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .top-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex: 0 0 auto;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      min-width: 0;
+      gap: 10px;
+    }
+
+    .brand-mark {
+      display: grid;
+      flex: 0 0 38px;
+      width: 38px;
+      height: 38px;
+      place-items: center;
+      border: 1px solid rgba(17, 24, 39, 0.12);
+      border-radius: var(--radius);
+      background: var(--ink);
+      color: #ffffff;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 1.24rem;
+      line-height: 1.1;
+      letter-spacing: 0;
+    }
+
+    .app-tabs,
+    .segmented {
+      display: grid;
+      gap: 4px;
+      padding: 4px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #E5E7EB;
+    }
+
+    .app-tabs {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      margin-bottom: 12px;
+    }
+
+    .segmented {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      margin-bottom: 12px;
+    }
+
+    .segmented.two {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      width: 132px;
+      margin: 0;
+    }
+
+    .app-tabs button,
+    .segmented button {
+      min-height: 42px;
+      border: 0;
+      border-radius: 6px;
+      background: transparent;
+      color: #9CA3AF;
+      cursor: pointer;
+      font-weight: 800;
+      transition: background-color 160ms ease, box-shadow 160ms ease, color 160ms ease, transform 160ms ease;
+    }
+
+    .app-tabs button.active,
+    .segmented button.active {
+      background: var(--ink);
+      color: #ffffff;
+      box-shadow: 0 8px 18px rgba(17, 24, 39, 0.16);
+    }
+
+    .view[hidden],
+    .field.hidden {
+      display: none;
+    }
+
+    .view {
+      transform-origin: center 22px;
+    }
+
+    .view.view-enter {
+      animation: view-enter 260ms cubic-bezier(0.2, 0.85, 0.22, 1) both;
+    }
+
+    .view.view-exit {
+      animation: view-exit 170ms ease both;
+      pointer-events: none;
+    }
+
+    .panel {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255, 255, 255, 0.96);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .icon-button,
+    .action-button {
+      display: inline-grid;
+      place-items: center;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel);
+      color: var(--ink);
+      box-shadow: 0 6px 18px rgba(17, 24, 39, 0.08);
+      cursor: pointer;
+      transition: background-color 150ms ease, border-color 150ms ease, box-shadow 150ms ease, color 150ms ease, transform 150ms ease;
+    }
+
+    .icon-button {
+      width: 42px;
+      height: 42px;
+    }
+
+    .theme-toggle svg:last-child,
+    html[data-theme="dark"] .theme-toggle svg:first-child {
+      display: none;
+    }
+
+    html[data-theme="dark"] .theme-toggle svg:last-child {
+      display: block;
+    }
+
+    .action-button {
+      min-height: 44px;
+      grid-auto-flow: column;
+      gap: 8px;
+      padding: 0 12px;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .action-button.primary {
+      border-color: var(--track);
+      background: var(--track);
+      color: #ffffff;
+    }
+
+    .action-button.secondary {
+      background: var(--track-soft);
+      border-color: rgba(249, 115, 22, 0.28);
+      color: #9A3412;
+    }
+
+    .action-button.warning {
+      background: #fff0ea;
+      border-color: rgba(255, 90, 61, 0.28);
+      color: #b63420;
+    }
+
+    .icon-button:hover,
+    .action-button:hover {
+      background: #F9FAFB;
+      border-color: #D1D5DB;
+      box-shadow: 0 8px 20px rgba(17, 24, 39, 0.1);
+    }
+
+    .icon-button:active,
+    .action-button:active,
+    .presets button:active {
+      transform: scale(0.98);
+    }
+
+    .route-art {
+      position: relative;
+      overflow: hidden;
+      min-height: 72px;
+      margin-bottom: 14px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #F3F4F6;
+    }
+
+    .route-art svg {
+      display: block;
+      width: 100%;
+      height: 72px;
+    }
+
+    .route-art .sun {
+      fill: var(--sun);
+    }
+
+    .route-art .hill {
+      fill: #E5E7EB;
+    }
+
+    .route-art .route {
+      fill: none;
+      stroke: var(--track);
+      stroke-width: 6;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .route-art .dash {
+      fill: none;
+      stroke: rgba(255, 255, 255, 0.9);
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-dasharray: 6 9;
+    }
+
+    .route-art .pin {
+      fill: var(--coral);
+      stroke: #ffffff;
+      stroke-width: 3;
+    }
+
+    .result {
+      padding: 16px;
+      background: var(--panel);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .result-row {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .result-kicker {
+      margin: 0 0 6px;
+      color: var(--muted);
+      font-size: 0.88rem;
+      font-weight: 800;
+    }
+
+    .result-value {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      gap: 8px;
+      min-height: 56px;
+    }
+
+    .result-main {
+      font-size: clamp(2.55rem, 13vw, 4.4rem);
+      line-height: 0.95;
+      color: var(--sky);
+      font-weight: 900;
+      letter-spacing: 0;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .result-unit {
+      color: var(--muted);
+      font-size: 1rem;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .result-sub {
+      margin: 10px 0 0;
+      color: var(--muted);
+      line-height: 1.35;
+      font-size: 0.96rem;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .copy-button {
+      flex: 0 0 42px;
+      margin-top: 4px;
+    }
+
+    .form,
+    .record-form {
+      display: grid;
+      gap: 9px;
+      padding: 12px 14px;
+    }
+
+    .field {
+      display: grid;
+      gap: 5px;
+    }
+
+    .field-head,
+    .section-head,
+    .split-head,
+    .record-card-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    label,
+    .label {
+      color: var(--muted);
+      font-size: 0.84rem;
+      font-weight: 800;
+    }
+
+    .distance-line,
+    .time-line,
+    .record-grid,
+    .actions-row {
+      display: grid;
+      gap: 8px;
+      grid-template-columns: repeat(auto-fit, minmax(128px, 1fr));
+    }
+
+    .distance-line {
+      grid-template-columns: minmax(0, 1fr) 76px;
+    }
+
+    .time-line {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .pace-line {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .record-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .record-distance-line {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 96px;
+      gap: 8px;
+    }
+
+    .record-grid .wide {
+      grid-column: 1 / -1;
+    }
+
+    .zone-grid,
+    .weather-grid {
+      display: grid;
+      gap: 8px;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+    }
+
+    .weather-grid {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .input-wrap {
+      position: relative;
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #ffffff;
+      color: var(--ink);
+      outline: none;
+      font-weight: 800;
+      font-variant-numeric: tabular-nums;
+    }
+
+    input,
+    select {
+      min-height: 46px;
+      padding: 14px 10px 6px;
+      font-size: 1.03rem;
+    }
+
+    input {
+      text-align: right;
+    }
+
+    select {
+      appearance: none;
+      text-align: center;
+      cursor: pointer;
+    }
+
+    textarea {
+      min-height: 76px;
+      resize: vertical;
+      padding: 10px 11px;
+      line-height: 1.45;
+      font-size: 0.98rem;
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus {
+      border-color: var(--sky);
+      box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.1);
+    }
+
+    input[type="date"] {
+      text-align: left;
+    }
+
+    .input-unit {
+      position: absolute;
+      top: 6px;
+      right: 12px;
+      color: var(--muted);
+      font-size: 0.72rem;
+      font-weight: 900;
+      pointer-events: none;
+    }
+
+    .distance-unit {
+      display: grid;
+      min-height: 46px;
+      place-items: center;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #F9FAFB;
+      color: var(--ink);
+      font-size: 1.04rem;
+      font-weight: 900;
+    }
+
+    .presets {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 7px;
+    }
+
+    .presets button {
+      min-height: 42px;
+      border: 1px solid rgba(249, 115, 22, 0.28);
+      border-radius: var(--radius);
+      background: var(--track-soft);
+      color: #9A3412;
+      cursor: pointer;
+      font-size: 0.86rem;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .presets button:nth-child(4),
+    .presets button:nth-child(5) {
+      background: #fff3d7;
+      border-color: rgba(255, 176, 0, 0.36);
+      color: #8a5c00;
+    }
+
+    .presets button.active {
+      background: var(--track);
+      border-color: var(--track);
+      color: #ffffff;
+    }
+
+    .split-band {
+      border-top: 1px solid var(--line);
+      background: #fff7e5;
+      padding: 14px 16px 16px;
+    }
+
+    .converter-band {
+      border-top: 1px solid var(--line);
+      background: #F9FAFB;
+      padding: 14px 16px 16px;
+    }
+
+    .converter-band .split-head .label {
+      color: #9A3412;
+    }
+
+    .converter-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .split-head {
+      margin-bottom: 10px;
+    }
+
+    .split-head .label {
+      color: #8a5c00;
+    }
+
+    .split-grid,
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .split-item,
+    .summary-item {
+      min-height: 58px;
+      border: 1px solid rgba(255, 176, 0, 0.28);
+      border-radius: var(--radius);
+      background: rgba(255, 255, 255, 0.82);
+      padding: 9px 10px;
+    }
+
+    .split-distance,
+    .summary-label,
+    .record-meta,
+    .record-mini {
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 900;
+    }
+
+    .split-time,
+    .summary-value {
+      margin-top: 4px;
+      color: var(--ink);
+      font-size: 1.05rem;
+      font-weight: 900;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .records-layout {
+      display: grid;
+      gap: 16px;
+    }
+
+    .record-surface {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255, 255, 255, 0.96);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .section-head {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--line);
+      background: #ffffff;
+    }
+
+    .section-title {
+      margin: 0;
+      font-size: 1rem;
+      font-weight: 900;
+      letter-spacing: 0;
+    }
+
+    .summary-band {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--line);
+      background: #F9FAFB;
+    }
+
+    .summary-item {
+      position: relative;
+      min-height: 52px;
+      border-color: #F1F1F1;
+      background: #ffffff;
+      padding: 8px 10px;
+      overflow: visible;
+    }
+
+    .summary-item:first-child,
+    .summary-item:nth-child(2) {
+      display: grid;
+      align-content: center;
+      gap: 2px;
+      border-left: 3px solid var(--track);
+      background: #ffffff;
+      border-color: #F1F1F1;
+      padding: 9px 11px;
+    }
+
+    .summary-item:first-child .summary-value,
+    .summary-item:nth-child(2) .summary-value {
+      order: -1;
+      margin-top: 0;
+      font-size: 1.74rem;
+      line-height: 0.98;
+      color: var(--sky);
+    }
+
+    .summary-item.is-bumped .summary-value {
+      animation: stat-bump 520ms cubic-bezier(0.2, 1.2, 0.26, 1) both;
+    }
+
+    .summary-value.is-counting {
+      animation: stat-count 360ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+    }
+
+    .summary-bonus {
+      position: absolute;
+      top: 8px;
+      right: 9px;
+      z-index: 2;
+      color: var(--track);
+      font-size: 0.9rem;
+      font-weight: 1000;
+      line-height: 1;
+      text-shadow: 0 2px 8px rgba(249, 115, 22, 0.2);
+      animation: bonus-pop 880ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      pointer-events: none;
+      white-space: nowrap;
+    }
+
+    .text-tools {
+      display: grid;
+      gap: 10px;
+      border-top: 1px solid var(--line);
+      padding-top: 14px;
+    }
+
+    .file-line {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .file-name {
+      min-height: 44px;
+      display: grid;
+      align-items: center;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #ffffff;
+      color: var(--muted);
+      padding: 0 12px;
+      font-size: 0.88rem;
+      font-weight: 800;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .list-head {
+      margin: 18px 0 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .list-head .section-title {
+      display: flex;
+      align-items: center;
+      flex: 0 0 auto;
+      gap: 7px;
+      white-space: nowrap;
+    }
+
+    .list-head .section-title::before {
+      content: "";
+      flex: 0 0 8px;
+      width: 8px;
+      height: 24px;
+      border-radius: 999px;
+      background: linear-gradient(180deg, var(--coral), var(--track));
+    }
+
+    .record-tools,
+    .insights-panel,
+    .calendar-panel {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #ffffff;
+      box-shadow: 0 8px 22px rgba(17, 24, 39, 0.045);
+    }
+
+    .record-tools {
+      display: grid;
+      gap: 8px;
+      margin-bottom: 12px;
+      padding: 10px;
+    }
+
+    .tool-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+      gap: 8px;
+    }
+
+    .record-tools input,
+    .record-tools select {
+      min-height: 42px;
+      padding-top: 13px;
+      font-size: 0.96rem;
+    }
+
+    .search-wrap input {
+      padding-left: 34px;
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 11px;
+      top: 50%;
+      width: 16px;
+      height: 16px;
+      color: var(--muted);
+      transform: translateY(-50%);
+      pointer-events: none;
+    }
+
+    .insights-panel {
+      display: grid;
+      gap: 10px;
+      margin-bottom: 12px;
+      padding: 10px;
+    }
+
+    .insight-grid,
+    .pb-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .insight-card,
+    .pb-card {
+      min-height: 58px;
+      border: 1px solid var(--line);
+      border-left: 3px solid #E5E7EB;
+      border-radius: 6px;
+      background: #ffffff;
+      padding: 8px 9px;
+    }
+
+    .insight-card.primary {
+      border-left-color: var(--track);
+    }
+
+    .insight-label,
+    .pb-label,
+    .record-count-note {
+      color: var(--muted);
+      font-size: 0.72rem;
+      font-weight: 900;
+    }
+
+    .insight-value,
+    .pb-value {
+      margin-top: 3px;
+      color: var(--ink);
+      font-size: 1.18rem;
+      font-weight: 900;
+      line-height: 1.05;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .insight-card.primary .insight-value {
+      font-size: 1.3rem;
+    }
+
+    .insight-sub,
+    .pb-sub {
+      margin-top: 6px;
+      color: #9CA3AF;
+      font-size: 0.7rem;
+      font-weight: 760;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .analysis-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .analysis-card {
+      min-height: 112px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #ffffff;
+      padding: 9px;
+      overflow: hidden;
+    }
+
+    .analysis-card.wide {
+      grid-column: 1 / -1;
+    }
+
+    .analysis-head {
+      display: flex;
+      align-items: start;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .analysis-title,
+    .metric-label {
+      color: var(--muted);
+      font-size: 0.72rem;
+      font-weight: 900;
+    }
+
+    .analysis-value,
+    .metric-value {
+      color: var(--ink);
+      font-size: 1.15rem;
+      line-height: 1.05;
+      font-weight: 900;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .analysis-sub {
+      margin-top: 2px;
+      color: #9CA3AF;
+      font-size: 0.7rem;
+      font-weight: 800;
+    }
+
+    .chart-wrap {
+      position: relative;
+      min-height: 96px;
+    }
+
+    .trend-chart {
+      width: 100%;
+      height: 88px;
+      display: block;
+    }
+
+    .chart-tooltip {
+      position: absolute;
+      z-index: 2;
+      max-width: 150px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #ffffff;
+      color: var(--ink);
+      box-shadow: 0 10px 24px rgba(17, 24, 39, 0.12);
+      padding: 6px 8px;
+      font-size: 0.72rem;
+      font-weight: 900;
+      line-height: 1.25;
+      pointer-events: none;
+      transform: translate(-50%, -112%);
+      white-space: nowrap;
+    }
+
+    .chart-tooltip[hidden] {
+      display: none;
+    }
+
+    .chart-tooltip strong,
+    .chart-tooltip span {
+      display: block;
+    }
+
+    .chart-tooltip span {
+      margin-top: 2px;
+      color: var(--muted);
+      font-weight: 800;
+    }
+
+    .chart-axis {
+      stroke: var(--line);
+      stroke-width: 1;
+    }
+
+    .chart-line {
+      fill: none;
+      stroke: var(--track);
+      stroke-width: 2.4;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-dasharray: 1;
+      stroke-dashoffset: 1;
+      animation: chart-draw 540ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+    }
+
+    .chart-area {
+      fill: rgba(249, 115, 22, 0.12);
+    }
+
+    .chart-point {
+      fill: #ffffff;
+      stroke: var(--track);
+      stroke-width: 1.8;
+      cursor: pointer;
+      opacity: 0.85;
+      transition: opacity 160ms ease, r 160ms ease;
+    }
+
+    .chart-point:hover,
+    .chart-point:focus {
+      opacity: 1;
+      outline: none;
+    }
+
+    .chart-point.last-point {
+      transform-box: fill-box;
+      transform-origin: center;
+      animation: point-pop 420ms cubic-bezier(0.2, 0.8, 0.2, 1) 520ms both;
+    }
+
+    .streak-card .analysis-head {
+      margin-bottom: 12px;
+    }
+
+    .metric-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .metric-tile {
+      border-left: 3px solid #E5E7EB;
+      padding-left: 8px;
+      min-width: 0;
+    }
+
+    .metric-tile.highlight {
+      border-left-color: var(--track);
+    }
+
+    .pb-badge {
+      display: inline-grid;
+      place-items: center;
+      min-height: 18px;
+      padding: 0 6px;
+      border-radius: 999px;
+      background: var(--track);
+      color: #ffffff;
+      font-size: 0.62rem;
+      font-weight: 900;
+      letter-spacing: 0;
+    }
+
+    .calendar-panel {
+      margin-bottom: 10px;
+      padding: 10px;
+    }
+
+    .calendar-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .calendar-head strong {
+      color: var(--ink);
+      font-size: 0.92rem;
+      font-weight: 900;
+    }
+
+    .calendar-head .icon-button {
+      width: 30px;
+      height: 30px;
+      box-shadow: none;
+    }
+
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+      gap: 4px;
+    }
+
+    .calendar-weekday,
+    .calendar-day {
+      min-width: 0;
+      text-align: center;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .calendar-weekday {
+      color: var(--muted);
+      font-size: 0.7rem;
+      font-weight: 900;
+      padding-bottom: 4px;
+    }
+
+    .calendar-day {
+      display: grid;
+      align-content: center;
+      min-height: 42px;
+      border: 1px solid transparent;
+      border-radius: 6px;
+      color: var(--muted);
+      font-size: 0.72rem;
+      font-weight: 900;
+      background: transparent;
+      transform: translate3d(0, 0, 0);
+      transition: transform 140ms ease, border-color 140ms ease, color 140ms ease;
+    }
+
+    .calendar-day.has-run {
+      border-color: var(--run-border, rgba(249, 115, 22, 0.2));
+      background: var(--run-bg, var(--track-soft));
+      color: var(--run-text, var(--ink));
+      cursor: pointer;
+    }
+
+    .calendar-day.has-run:hover,
+    .calendar-day.has-run:focus {
+      transform: translate3d(0, -1px, 0);
+      outline: none;
+    }
+
+    .calendar-day.calendar-press {
+      animation: calendar-press 150ms ease-out both;
+    }
+
+    .calendar-grid.calendar-slide-next {
+      animation: calendar-slide-next 230ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+    }
+
+    .calendar-grid.calendar-slide-prev {
+      animation: calendar-slide-prev 230ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+    }
+
+    .calendar-day.today {
+      border-color: var(--track);
+      box-shadow: inset 0 0 0 2px var(--track);
+      color: var(--ink);
+    }
+
+    .calendar-day .date {
+      display: block;
+      line-height: 1;
+    }
+
+    .calendar-day .distance {
+      display: block;
+      margin-top: 4px;
+      color: var(--run-distance, var(--track));
+      font-size: 0.66rem;
+      white-space: nowrap;
+    }
+
+    .record-count-note {
+      margin: 0 0 8px;
+      text-align: right;
+    }
+
+    .record-list {
+      display: grid;
+      gap: 12px;
+    }
+
+    .record-card {
+      position: relative;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #ffffff;
+      box-shadow: 0 8px 22px rgba(17, 24, 39, 0.065);
+      overflow: hidden;
+      transform: translate3d(0, 0, 0);
+      transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;
+    }
+
+    .record-card:hover {
+      transform: translate3d(0, -5px, 0);
+      border-color: rgba(249, 115, 22, 0.24);
+      box-shadow: 0 18px 34px rgba(17, 24, 39, 0.14);
+    }
+
+    .record-card.record-card-enter {
+      animation: record-card-enter 420ms cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+
+    .record-card::before {
+      content: "";
+      display: block;
+      height: 4px;
+      background: linear-gradient(90deg, var(--coral), var(--track) 66%, #F59E0B);
+    }
+
+    .record-card-head,
+    .record-card-body {
+      padding: 11px 12px;
+    }
+
+    .record-card-head {
+      align-items: center;
+      border-bottom: 0;
+      background: #ffffff;
+      padding-top: 7px;
+      padding-bottom: 0;
+    }
+
+    .record-card-head > div:first-child {
+      min-width: 0;
+    }
+
+    .record-card-actions {
+      display: flex;
+      flex: 0 0 auto;
+      gap: 6px;
+    }
+
+    .record-card-actions .icon-button {
+      width: 32px;
+      height: 32px;
+      border-color: var(--line);
+      background: #ffffff;
+      box-shadow: none;
+    }
+
+    .record-card-actions .icon-button:hover {
+      border-color: rgba(249, 115, 22, 0.42);
+      color: var(--track);
+    }
+
+    .record-card-actions .details-toggle {
+      border-color: var(--ink);
+      background: var(--ink);
+      color: #ffffff;
+    }
+
+    .record-card-actions .details-toggle:hover,
+    .record-card-actions .details-toggle.active {
+      border-color: var(--track);
+      background: var(--track);
+      color: #ffffff;
+    }
+
+    .record-title {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      margin: 0;
+      font-size: 0.98rem;
+      line-height: 1.1;
+      font-weight: 900;
+    }
+
+    .record-title::before {
+      content: "";
+      width: 4px;
+      height: 13px;
+      border-radius: 999px;
+      background: var(--coral);
+    }
+
+    .record-card .record-meta {
+      color: #9CA3AF;
+      font-size: 0.73rem;
+      font-weight: 800;
+      line-height: 1.1;
+    }
+
+    .record-card-body {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 82px;
+      gap: 10px;
+      align-items: start;
+      padding-top: 5px;
+      background: #ffffff;
+    }
+
+    .record-card.no-image .record-card-body {
+      grid-template-columns: 1fr;
+    }
+
+    .record-stats {
+      display: grid;
+      grid-template-columns: 1.25fr 0.9fr 0.95fr;
+      gap: 0;
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      padding: 7px 0;
+    }
+
+    .record-stat {
+      min-height: 58px;
+      border: 0;
+      border-right: 1px solid var(--line);
+      border-radius: 0;
+      background: transparent;
+      padding: 7px 10px 6px;
+      box-shadow: none;
+    }
+
+    .record-stat:last-child {
+      border-right: 0;
+    }
+
+    .record-stat:first-child {
+      position: relative;
+      overflow: hidden;
+      background: transparent;
+      color: var(--ink);
+      box-shadow: none;
+    }
+
+    .record-stat:first-child::after {
+      content: "";
+      position: absolute;
+      left: 10px;
+      bottom: 2px;
+      width: 58px;
+      height: 3px;
+      border: 0;
+      border-radius: 50%;
+      background: var(--track);
+    }
+
+    .record-stat:nth-child(3) {
+      color: var(--ink);
+    }
+
+    .record-stat strong {
+      position: relative;
+      display: block;
+      margin-top: 3px;
+      font-size: 1rem;
+      font-weight: 900;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .record-stat:first-child .record-mini {
+      color: var(--muted);
+    }
+
+    .record-stat:first-child strong {
+      color: var(--sky);
+      font-size: 1.6rem;
+      line-height: 1;
+    }
+
+    .record-extra {
+      display: grid;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .details-toggle svg {
+      transition: transform 240ms cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+
+    .details-toggle.active svg {
+      transform: rotate(180deg);
+    }
+
+    .record-detail-panel {
+      display: grid;
+      grid-template-rows: 0fr;
+      margin-top: 0;
+      border: 0 solid transparent;
+      border-radius: var(--radius);
+      background: #F9FAFB;
+      padding: 0 10px;
+      opacity: 0;
+      overflow: hidden;
+      transform: translateY(-4px);
+      transition: grid-template-rows 280ms cubic-bezier(0.2, 0.8, 0.2, 1), margin-top 240ms ease-out, padding 240ms ease-out, opacity 220ms ease-out, transform 260ms ease-out, border-color 240ms ease-out;
+    }
+
+    .record-detail-panel.open {
+      grid-template-rows: 1fr;
+      margin-top: 12px;
+      border-width: 1px;
+      border-color: var(--line);
+      padding: 10px;
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .record-detail-body {
+      display: grid;
+      gap: 10px;
+      padding-top: 0;
+      overflow: hidden;
+      opacity: 0;
+      transform: translateY(-6px);
+      transition: opacity 220ms ease-out, transform 260ms cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+
+    .record-detail-panel.open .record-detail-body {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      margin: -1px;
+      padding: 0;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    .detail-metrics {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .detail-metric {
+      display: grid;
+      grid-template-columns: 22px minmax(0, 1fr);
+      gap: 6px;
+      align-items: center;
+      min-height: 40px;
+      border-left: 2px solid #E5E7EB;
+      background: #ffffff;
+      padding: 7px 8px;
+      color: var(--muted);
+      font-weight: 900;
+      font-size: 0.78rem;
+    }
+
+    .detail-icon {
+      display: grid;
+      width: 22px;
+      height: 22px;
+      place-items: center;
+      color: #4B5563;
+    }
+
+    .detail-icon svg,
+    .weather-icon svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    .detail-icon svg [stroke],
+    .weather-icon svg [stroke] {
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .detail-metric strong {
+      display: block;
+      color: var(--ink);
+      font-size: 0.96rem;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .heart-panel {
+      display: grid;
+      gap: 8px;
+      border-left: 4px solid var(--coral);
+      border-radius: 6px;
+      background: #ffffff;
+      padding: 9px;
+    }
+
+    .heart-values {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .heart-value {
+      min-height: 44px;
+      border-top: 0;
+      border-left: 3px solid rgba(239, 68, 68, 0.74);
+      background: #ffffff;
+      padding: 6px 8px;
+    }
+
+    .heart-value .record-mini {
+      color: #9CA3AF;
+      font-size: 0.72rem;
+      font-weight: 800;
+    }
+
+    .heart-value strong {
+      display: flex;
+      align-items: baseline;
+      gap: 4px;
+      margin-top: 1px;
+      color: var(--ink);
+      line-height: 1;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .heart-number {
+      font-size: 1.42rem;
+      font-weight: 900;
+    }
+
+    .heart-unit {
+      color: var(--muted);
+      font-size: 0.74rem;
+      font-weight: 900;
+    }
+
+    .zone-bars {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 6px;
+      align-items: end;
+      min-height: 74px;
+      padding-top: 4px;
+    }
+
+    .zone-bar-item {
+      display: grid;
+      gap: 4px;
+      align-content: end;
+      min-width: 0;
+      color: var(--muted);
+      font-size: 0.72rem;
+      font-weight: 900;
+      text-align: center;
+    }
+
+    .zone-bar-track {
+      display: flex;
+      align-items: end;
+      height: 42px;
+      border-radius: 3px;
+      background: #E5E7EB;
+      overflow: hidden;
+    }
+
+    .zone-bar-fill {
+      width: 100%;
+      min-height: 2px;
+      border-radius: 3px 3px 0 0;
+    }
+
+    .weather-row {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 8px;
+      border-left: 3px solid #E5E7EB;
+      border-radius: 6px;
+      background: #ffffff;
+      padding: 9px;
+    }
+
+    .weather-item {
+      display: grid;
+      grid-template-columns: 22px minmax(0, 1fr);
+      gap: 5px;
+      align-items: center;
+      min-width: 0;
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 900;
+    }
+
+    .weather-icon {
+      display: grid;
+      width: 22px;
+      height: 22px;
+      place-items: center;
+      color: #4B5563;
+    }
+
+    .weather-item strong {
+      display: block;
+      color: var(--ink);
+      font-size: 0.84rem;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+
+    .record-notes {
+      border-left: 3px solid rgba(249, 115, 22, 0.38);
+      color: var(--muted);
+      padding-left: 8px;
+      font-size: 0.82rem;
+      font-weight: 800;
+      line-height: 1.45;
+    }
+
+    .list-actions {
+      display: flex;
+      flex-wrap: nowrap;
+      justify-content: flex-end;
+      gap: 6px;
+      min-width: 0;
+    }
+
+    .list-actions .action-button {
+      min-height: 38px;
+      gap: 5px;
+      padding: 0 8px;
+      border-color: #F1F1F1;
+      box-shadow: none;
+      font-size: 0.88rem;
+    }
+
+    .empty-state {
+      border: 1px dashed var(--line);
+      border-radius: var(--radius);
+      background: rgba(255, 255, 255, 0.72);
+      color: var(--muted);
+      padding: 18px;
+      text-align: center;
+      font-weight: 900;
+    }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: max(18px, env(safe-area-inset-bottom));
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      transform: translateX(-50%) translateY(18px);
+      opacity: 0;
+      pointer-events: none;
+      border-radius: 999px;
+      background: #202124;
+      color: #ffffff;
+      padding: 10px 14px;
+      font-size: 0.9rem;
+      font-weight: 800;
+      transition: opacity 180ms ease, transform 180ms ease;
+      z-index: 10;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+      pointer-events: auto;
+    }
+
+    .toast-action {
+      border: 0;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.14);
+      color: #ffffff;
+      cursor: pointer;
+      font-weight: 900;
+      padding: 5px 9px;
+    }
+
+    .toast-action:hover {
+      background: rgba(255, 255, 255, 0.22);
+    }
+
+    html[data-theme="dark"] {
+      --bg: #000000;
+      --panel: #000000;
+      --ink: #F9FAFB;
+      --muted: #9CA3AF;
+      --line: #26303B;
+      --track-soft: rgba(249, 115, 22, 0.14);
+      --sky: #F9FAFB;
+      --sky-soft: #000000;
+      --shadow: 0 16px 34px rgba(0, 0, 0, 0.34);
+    }
+
+    html[data-theme="dark"] .brand-mark,
+    html[data-theme="dark"] .segmented button.active,
+    html[data-theme="dark"] .app-tabs button.active,
+    html[data-theme="dark"] .record-card-actions .details-toggle {
+      background: #000000;
+      color: #F9FAFB;
+      box-shadow: inset 0 0 0 1px #F9FAFB;
+    }
+
+    html[data-theme="dark"] .panel,
+    html[data-theme="dark"] .record-surface,
+    html[data-theme="dark"] .section-head,
+    html[data-theme="dark"] .record-card,
+    html[data-theme="dark"] .record-card-head,
+    html[data-theme="dark"] .record-card-body,
+    html[data-theme="dark"] .record-tools,
+    html[data-theme="dark"] .insights-panel,
+    html[data-theme="dark"] .calendar-panel,
+    html[data-theme="dark"] .insight-card,
+    html[data-theme="dark"] .pb-card,
+    html[data-theme="dark"] .analysis-card,
+    html[data-theme="dark"] .heart-panel,
+    html[data-theme="dark"] .heart-value,
+    html[data-theme="dark"] .detail-metric,
+    html[data-theme="dark"] .weather-row,
+    html[data-theme="dark"] .icon-button,
+    html[data-theme="dark"] .action-button,
+    html[data-theme="dark"] input,
+    html[data-theme="dark"] select,
+    html[data-theme="dark"] textarea {
+      background: #000000;
+      color: var(--ink);
+    }
+
+    html[data-theme="dark"] .app-tabs,
+    html[data-theme="dark"] .segmented,
+    html[data-theme="dark"] .summary-band,
+    html[data-theme="dark"] .converter-band,
+    html[data-theme="dark"] .record-detail-panel,
+    html[data-theme="dark"] .route-art,
+    html[data-theme="dark"] .distance-unit {
+      background: #000000;
+    }
+
+    html[data-theme="dark"] .split-band {
+      background: #000000;
+    }
+
+    html[data-theme="dark"] .summary-item,
+    html[data-theme="dark"] .split-item {
+      background: #000000;
+      border-color: var(--line);
+    }
+
+    html[data-theme="dark"] .calendar-day.has-run {
+      background: #000000;
+      border-color: var(--run-border, rgba(249, 115, 22, 0.34));
+      color: var(--ink);
+      box-shadow: inset 0 -3px 0 var(--run-distance, var(--track));
+    }
+
+    html[data-theme="dark"] .calendar-day.today {
+      box-shadow: inset 0 0 0 2px var(--track);
+    }
+
+    html[data-theme="dark"] .record-card:hover {
+      border-color: rgba(249, 115, 22, 0.34);
+      box-shadow: 0 20px 36px rgba(0, 0, 0, 0.42);
+    }
+
+    html[data-theme="dark"] .record-card-actions .details-toggle:hover,
+    html[data-theme="dark"] .record-card-actions .details-toggle.active {
+      background: var(--track);
+      border-color: var(--track);
+      color: #ffffff;
+    }
+
+    html[data-theme="dark"] .icon-button:hover,
+    html[data-theme="dark"] .action-button:hover {
+      background: #000000;
+      border-color: #374151;
+    }
+
+    html[data-theme="dark"] .chart-tooltip {
+      background: #000000;
+      border-color: #374151;
+      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.34);
+    }
+
+    html[data-theme="dark"] .chart-point {
+      fill: #000000;
+    }
+
+    html[data-theme="dark"] input:focus,
+    html[data-theme="dark"] select:focus,
+    html[data-theme="dark"] textarea:focus {
+      border-color: #F9FAFB;
+      box-shadow: 0 0 0 3px rgba(249, 250, 251, 0.12);
+    }
+
+    @media (min-width: 720px) {
+      .app {
+        padding-top: 28px;
+      }
+
+      .main-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 240px;
+        gap: 14px;
+        align-items: start;
+      }
+
+      .route-art {
+        min-height: 100%;
+        margin: 0;
+      }
+
+      .route-art svg {
+        height: 100%;
+        min-height: 358px;
+      }
+
+      .split-grid {
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+      }
+
+      .records-layout {
+        gap: 24px;
+        grid-template-columns: minmax(0, 1.04fr) minmax(300px, 0.96fr);
+        align-items: start;
+      }
+
+      .list-head {
+        margin-top: 0;
+      }
+    }
+
+    @media (max-width: 420px) {
+      .topbar {
+        align-items: flex-start;
+      }
+
+      .segmented.two {
+        width: 118px;
+      }
+
+      .top-actions {
+        gap: 6px;
+      }
+
+      .theme-toggle {
+        width: 38px;
+        height: 38px;
+      }
+
+      .presets {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .list-head {
+        align-items: center;
+        gap: 6px;
+      }
+
+      .list-head .section-title {
+        font-size: 0.95rem;
+      }
+
+      .list-head .section-title::before {
+        flex-basis: 7px;
+        width: 7px;
+        height: 22px;
+      }
+
+      .list-actions {
+        gap: 4px;
+      }
+
+      .list-actions .action-button {
+        min-height: 38px;
+        gap: 4px;
+        padding: 0 7px;
+        font-size: 0.84rem;
+      }
+
+      .list-actions .action-button svg {
+        width: 16px;
+        height: 16px;
+      }
+
+      .time-line,
+      .converter-grid,
+      .record-grid,
+      .record-stats,
+      .tool-row,
+      .insight-grid,
+      .pb-grid,
+      .analysis-grid,
+      .weather-row,
+      .zone-grid,
+      .weather-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .analysis-card.wide,
+      .metric-grid {
+        grid-column: 1 / -1;
+      }
+
+      .metric-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .time-line .input-wrap:first-child,
+      .record-grid .wide,
+      .record-grid .full-mobile {
+        grid-column: 1 / -1;
+      }
+
+      .record-card-body {
+        grid-template-columns: minmax(0, 1fr) 74px;
+      }
+
+      .record-distance-line {
+        grid-template-columns: minmax(0, 1fr) 78px;
+      }
+
+      input,
+      select {
+        font-size: 1.04rem;
+        padding-left: 8px;
+        padding-right: 8px;
+      }
+    }
+
+    @keyframes theme-wipe {
+      0% {
+        opacity: 1;
+      }
+
+      100% {
+        opacity: 0;
+      }
+    }
+
+    @keyframes view-enter {
+      from {
+        opacity: 0;
+        transform: translateY(16px) scale(0.985);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    @keyframes view-exit {
+      from {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+
+      to {
+        opacity: 0;
+        transform: translateY(-8px) scale(0.992);
+      }
+    }
+
+    @keyframes stat-bump {
+      0% {
+        transform: translateY(0) scale(1);
+      }
+
+      38% {
+        transform: translateY(-3px) scale(1.08);
+      }
+
+      100% {
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    @keyframes bonus-pop {
+      0% {
+        opacity: 0;
+        transform: translateY(8px) scale(0.76);
+      }
+
+      18% {
+        opacity: 1;
+        transform: translateY(-4px) scale(1.16);
+      }
+
+      72% {
+        opacity: 1;
+      }
+
+      100% {
+        opacity: 0;
+        transform: translateY(-34px) scale(1);
+      }
+    }
+
+    @keyframes chart-draw {
+      to {
+        stroke-dashoffset: 0;
+      }
+    }
+
+    @keyframes point-pop {
+      0% {
+        opacity: 0.85;
+        transform: scale(1);
+        transform-box: fill-box;
+        transform-origin: center;
+      }
+
+      46% {
+        opacity: 1;
+        transform: scale(1.55);
+      }
+
+      100% {
+        opacity: 0.9;
+        transform: scale(1);
+      }
+    }
+
+    @keyframes calendar-press {
+      0% {
+        transform: scale(1);
+      }
+
+      45% {
+        transform: scale(0.96);
+      }
+
+      100% {
+        transform: scale(1);
+      }
+    }
+
+    @keyframes calendar-slide-next {
+      from {
+        opacity: 0;
+        transform: translateX(10px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    @keyframes calendar-slide-prev {
+      from {
+        opacity: 0;
+        transform: translateX(-10px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    @keyframes record-card-enter {
+      0% {
+        opacity: 0;
+        transform: translateY(-10px) scale(0.98);
+      }
+
+      54% {
+        opacity: 1;
+        transform: translateY(3px) scale(1.012);
+      }
+
+      100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        scroll-behavior: auto !important;
+        transition-duration: 0.01ms !important;
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+            <path d="M12 6v6l4 2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M5.4 4.8a9 9 0 1 0 13.2 0" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+            <path d="M9 2h6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <h1>配速紀錄</h1>
+      </div>
+
+      <div class="top-actions">
+        <button type="button" class="icon-button theme-toggle" id="themeToggle" aria-label="深色模式" title="深色模式" aria-pressed="false">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M12 3v2M12 19v2M5.6 5.6 7 7M17 17l1.4 1.4M3 12h2M19 12h2M5.6 18.4 7 17M17 7l1.4-1.4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="2"/>
+          </svg>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M20 15.2A7.7 7.7 0 0 1 8.8 4 8.5 8.5 0 1 0 20 15.2Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+          </svg>
+        </button>
+        <div class="segmented two" aria-label="單位">
+          <button type="button" class="active" data-unit="km">km</button>
+          <button type="button" data-unit="mi">mi</button>
+        </div>
+      </div>
+    </header>
+
+    <nav class="app-tabs" aria-label="頁面">
+      <button type="button" class="active" data-view="calculator">配速</button>
+      <button type="button" data-view="records">紀錄</button>
+    </nav>
+
+    <section class="view" id="calculatorView">
+      <div class="main-grid">
+        <section class="panel" aria-label="配速計算">
+          <nav class="segmented" aria-label="計算模式">
+            <button type="button" class="active" data-mode="pace">配速</button>
+            <button type="button" data-mode="finish">完賽</button>
+            <button type="button" data-mode="distance">距離</button>
+          </nav>
+
+          <section class="result" aria-live="polite">
+            <div class="result-row">
+              <div>
+                <p class="result-kicker" id="resultKicker">每公里配速</p>
+                <div class="result-value">
+                  <span class="result-main" id="resultMain">5:00</span>
+                  <span class="result-unit" id="resultUnit">/km</span>
+                </div>
+                <p class="result-sub" id="resultSub">5.00 km · 25:00</p>
+              </div>
+              <button type="button" class="icon-button copy-button" id="copyButton" aria-label="複製結果" title="複製結果">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <rect x="8" y="8" width="11" height="12" rx="2" stroke="currentColor" stroke-width="2"/>
+                  <path d="M5 16V6a2 2 0 0 1 2-2h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+              </button>
+            </div>
+          </section>
+
+          <form class="form" id="calculatorForm">
+            <section class="field" id="distanceField">
+              <div class="field-head">
+                <label for="distanceInput">距離</label>
+                <button type="button" class="icon-button" id="clearDistance" aria-label="清空距離" title="清空距離">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="M18 6 6 18M6 6l12 12" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+                  </svg>
+                </button>
+              </div>
+              <div class="distance-line">
+                <div class="input-wrap">
+                  <input id="distanceInput" name="distance" type="number" min="0" step="0.01" inputmode="decimal" value="5">
+                  <span class="input-unit">自訂</span>
+                </div>
+                <div class="distance-unit" id="distanceUnit">km</div>
+              </div>
+              <div class="presets" id="presets" aria-label="常用距離"></div>
+            </section>
+
+            <section class="field" id="timeField">
+              <span class="label" id="timeLabel">時間</span>
+              <div class="time-line">
+                <div class="input-wrap">
+                  <input id="hoursInput" name="hours" type="number" min="0" step="1" inputmode="numeric" value="0">
+                  <span class="input-unit">時</span>
+                </div>
+                <div class="input-wrap">
+                  <input id="minutesInput" name="minutes" type="number" min="0" step="1" inputmode="numeric" value="25">
+                  <span class="input-unit">分</span>
+                </div>
+                <div class="input-wrap">
+                  <input id="secondsInput" name="seconds" type="number" min="0" step="1" inputmode="numeric" value="0">
+                  <span class="input-unit">秒</span>
+                </div>
+              </div>
+            </section>
+
+            <section class="field hidden" id="paceField">
+              <span class="label" id="paceLabel">配速 /km</span>
+              <div class="time-line pace-line">
+                <div class="input-wrap">
+                  <input id="paceMinutesInput" name="paceMinutes" type="number" min="0" step="1" inputmode="numeric" value="5">
+                  <span class="input-unit">分</span>
+                </div>
+                <div class="input-wrap">
+                  <input id="paceSecondsInput" name="paceSeconds" type="number" min="0" step="1" inputmode="numeric" value="0">
+                  <span class="input-unit">秒</span>
+                </div>
+              </div>
+            </section>
+
+            <div class="actions-row">
+              <button type="button" class="action-button secondary" id="useCalcButton">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+                </svg>
+                加到紀錄
+              </button>
+            </div>
+          </form>
+
+          <section class="converter-band" aria-label="配速時速轉換">
+            <div class="split-head">
+              <span class="label">配速 / 時速轉換</span>
+              <button type="button" class="icon-button" id="clearConverterButton" aria-label="清空轉換" title="清空轉換">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M18 6 6 18M6 6l12 12" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+                </svg>
+              </button>
+            </div>
+            <div class="converter-grid">
+              <section class="field">
+                <label for="converterPace">配速 /<span id="converterPaceUnit">km</span></label>
+                <input id="converterPace" type="text" inputmode="numeric" placeholder="6:00">
+              </section>
+              <section class="field">
+                <label for="converterSpeed">時速 <span id="converterSpeedUnit">km/h</span></label>
+                <input id="converterSpeed" type="number" min="0" step="0.1" inputmode="decimal" placeholder="10.0">
+              </section>
+            </div>
+          </section>
+
+          <section class="split-band" id="splitBand">
+            <div class="split-head">
+              <span class="label">常用距離</span>
+              <button type="button" class="icon-button" id="resetButton" aria-label="重設" title="重設">
+                <svg width="19" height="19" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M4 7v5h5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M20 12a8 8 0 0 0-14.7-4.4L4 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M4 12a8 8 0 0 0 14.7 4.4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+              </button>
+            </div>
+            <div class="split-grid" id="splitGrid"></div>
+          </section>
+        </section>
+
+        <aside class="route-art" aria-hidden="true">
+          <svg viewBox="0 0 260 360" preserveAspectRatio="none">
+            <circle class="sun" cx="210" cy="44" r="18"/>
+            <path class="hill" d="M0 132 C38 92 76 96 112 136 C154 184 207 134 260 92 L260 360 L0 360 Z"/>
+            <path class="route" d="M-14 298 C42 256 81 332 133 285 C183 240 165 160 214 130 C235 116 253 114 274 122"/>
+            <path class="dash" d="M-14 298 C42 256 81 332 133 285 C183 240 165 160 214 130 C235 116 253 114 274 122"/>
+            <circle class="pin" cx="133" cy="285" r="9"/>
+            <circle class="pin" cx="214" cy="130" r="9"/>
+          </svg>
+        </aside>
+      </div>
+    </section>
+
+    <section class="view" id="recordsView" hidden>
+      <div class="records-layout">
+        <section class="record-surface" aria-label="新增跑步紀錄">
+          <div class="section-head">
+            <h2 class="section-title" id="recordFormTitle">新增紀錄</h2>
+            <button type="button" class="icon-button" id="newRecordButton" aria-label="新紀錄" title="新紀錄">
+              <svg width="19" height="19" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+              </svg>
+            </button>
+          </div>
+
+          <div class="summary-band">
+            <div class="summary-grid" id="summaryGrid"></div>
+          </div>
+
+          <form class="record-form" id="recordForm">
+            <div class="record-grid">
+              <section class="field full-mobile">
+                <label for="recordDate">日期</label>
+                <input id="recordDate" type="date">
+              </section>
+
+              <section class="field full-mobile">
+                <label for="recordTitle">名稱</label>
+                <input id="recordTitle" type="text" value="跑步" autocomplete="off">
+              </section>
+
+              <section class="field full-mobile">
+                <label for="recordSurface">室內 / 室外</label>
+                <select id="recordSurface">
+                  <option value="outdoor">室外</option>
+                  <option value="indoor">室內</option>
+                </select>
+              </section>
+
+              <section class="field full-mobile">
+                <label for="recordDistance">距離</label>
+                <div class="record-distance-line">
+                  <div class="input-wrap">
+                    <input id="recordDistance" type="number" min="0" step="0.01" inputmode="decimal">
+                    <span class="input-unit">數值</span>
+                  </div>
+                  <select id="recordUnit" aria-label="距離單位">
+                    <option value="km">km</option>
+                    <option value="mi">mi</option>
+                  </select>
+                </div>
+              </section>
+
+              <section class="field">
+                <label for="recordDuration">時間</label>
+                <input id="recordDuration" type="text" inputmode="numeric" placeholder="24:47">
+              </section>
+
+              <section class="field">
+                <label for="recordPace">平均配速</label>
+                <input id="recordPace" type="text" inputmode="numeric" placeholder="6:11">
+              </section>
+
+              <section class="field wide">
+                <label for="recordKilometerPaces">每公里配速</label>
+                <textarea id="recordKilometerPaces" placeholder="1K 5:58&#10;2K 6:18&#10;3K 6:35"></textarea>
+              </section>
+
+              <section class="field">
+                <label for="recordMaxHeartRate">最大心率</label>
+                <input id="recordMaxHeartRate" type="number" min="0" step="1" inputmode="numeric">
+              </section>
+
+              <section class="field">
+                <label for="recordHeartRate">平均心率</label>
+                <input id="recordHeartRate" type="number" min="0" step="1" inputmode="numeric">
+              </section>
+
+              <section class="field">
+                <label for="recordCalories">卡路里</label>
+                <input id="recordCalories" type="number" min="0" step="1" inputmode="numeric">
+              </section>
+
+              <section class="field">
+                <label for="recordCadence">步頻</label>
+                <input id="recordCadence" type="number" min="0" step="1" inputmode="numeric">
+              </section>
+
+              <section class="field wide">
+                <span class="label">心率區間占比</span>
+                <div class="zone-grid">
+                  <div class="input-wrap">
+                    <input id="recordZone1" type="number" min="0" max="100" step="0.1" inputmode="decimal">
+                    <span class="input-unit">Z1 %</span>
+                  </div>
+                  <div class="input-wrap">
+                    <input id="recordZone2" type="number" min="0" max="100" step="0.1" inputmode="decimal">
+                    <span class="input-unit">Z2 %</span>
+                  </div>
+                  <div class="input-wrap">
+                    <input id="recordZone3" type="number" min="0" max="100" step="0.1" inputmode="decimal">
+                    <span class="input-unit">Z3 %</span>
+                  </div>
+                  <div class="input-wrap">
+                    <input id="recordZone4" type="number" min="0" max="100" step="0.1" inputmode="decimal">
+                    <span class="input-unit">Z4 %</span>
+                  </div>
+                  <div class="input-wrap">
+                    <input id="recordZone5" type="number" min="0" max="100" step="0.1" inputmode="decimal">
+                    <span class="input-unit">Z5 %</span>
+                  </div>
+                </div>
+              </section>
+
+              <section class="field wide">
+                <span class="label">天氣</span>
+                <div class="weather-grid">
+                  <div class="input-wrap">
+                    <input id="recordTemperature" type="number" step="0.1" inputmode="decimal">
+                    <span class="input-unit">氣溫 °C</span>
+                  </div>
+                  <div class="input-wrap">
+                    <input id="recordHumidity" type="number" min="0" max="100" step="1" inputmode="numeric">
+                    <span class="input-unit">濕度 %</span>
+                  </div>
+                  <div class="input-wrap">
+                    <input id="recordWindSpeed" type="number" min="0" step="0.1" inputmode="decimal">
+                    <span class="input-unit">風速</span>
+                  </div>
+                  <div class="input-wrap">
+                    <input id="recordWindDirection" type="text" autocomplete="off" placeholder="東北">
+                    <span class="input-unit">風向</span>
+                  </div>
+                </div>
+              </section>
+
+              <section class="field wide">
+                <label for="recordNotes">備註</label>
+                <textarea id="recordNotes"></textarea>
+              </section>
+            </div>
+
+            <section class="text-tools">
+              <span class="label">智慧分析</span>
+              <div class="actions-row">
+                <button type="button" class="action-button secondary" id="parseTextButton">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="M7 7h10M7 12h10M7 17h6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+                  </svg>
+                  智慧分析
+                </button>
+              </div>
+
+              <section class="field">
+                <label for="ocrText">貼上文字</label>
+                <textarea id="ocrText"></textarea>
+              </section>
+            </section>
+
+            <div class="actions-row">
+              <button type="submit" class="action-button primary" id="saveRecordButton">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M5 12.5 9.3 17 19 7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                儲存紀錄
+              </button>
+            </div>
+          </form>
+        </section>
+
+        <section aria-label="跑步紀錄列表">
+          <div class="list-head">
+            <h2 class="section-title">跑步紀錄</h2>
+            <div class="list-actions">
+              <button type="button" class="action-button" id="backupButton">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M12 4v10m0 0 4-4m-4 4-4-4" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M5 20h14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+                </svg>
+                備份
+              </button>
+              <label class="action-button" for="importInput">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M12 20V10m0 0 4 4m-4-4-4 4" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M5 4h14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+                </svg>
+                匯入
+              </label>
+              <input id="importInput" type="file" accept="application/json,.json" hidden>
+              <button type="button" class="action-button" id="exportButton">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M12 4v10m0 0 4-4m-4 4-4-4" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M5 20h14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+                </svg>
+                CSV
+              </button>
+            </div>
+          </div>
+          <section class="record-tools" aria-label="搜尋、篩選與排序">
+            <div class="tool-row">
+              <section class="field">
+                <label for="recordSearch">搜尋</label>
+                <div class="input-wrap search-wrap">
+                  <svg class="search-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="m21 21-4.3-4.3M10.8 18a7.2 7.2 0 1 1 0-14.4 7.2 7.2 0 0 1 0 14.4Z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                  </svg>
+                  <input id="recordSearch" type="search" autocomplete="off" placeholder="名稱、日期、備註">
+                </div>
+              </section>
+              <section class="field">
+                <label for="recordSurfaceFilter">場地</label>
+                <select id="recordSurfaceFilter">
+                  <option value="all">全部</option>
+                  <option value="outdoor">室外</option>
+                  <option value="indoor">室內</option>
+                </select>
+              </section>
+            </div>
+            <div class="tool-row">
+              <section class="field">
+                <label for="recordRangeFilter">期間</label>
+                <select id="recordRangeFilter">
+                  <option value="all">全部紀錄</option>
+                  <option value="week">本週</option>
+                  <option value="month">本月</option>
+                  <option value="year">今年</option>
+                </select>
+              </section>
+              <section class="field">
+                <label for="recordSort">排序</label>
+                <select id="recordSort">
+                  <option value="date-desc">日期新到舊</option>
+                  <option value="date-asc">日期舊到新</option>
+                  <option value="distance-desc">距離高到低</option>
+                  <option value="pace-asc">配速快到慢</option>
+                </select>
+              </section>
+            </div>
+          </section>
+          <section class="insights-panel" aria-label="跑量統計與個人最佳">
+            <div class="insight-grid" id="volumeGrid"></div>
+            <div class="pb-grid" id="pbGrid"></div>
+            <div class="analysis-grid" id="analysisGrid"></div>
+          </section>
+          <section class="calendar-panel" aria-label="月曆檢視">
+            <div class="calendar-head">
+              <button type="button" class="icon-button" id="calendarPrev" aria-label="上一個月" title="上一個月">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="m15 18-6-6 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </button>
+              <strong id="calendarLabel"></strong>
+              <button type="button" class="icon-button" id="calendarNext" aria-label="下一個月" title="下一個月">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="m9 6 6 6-6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </button>
+            </div>
+            <div class="calendar-grid" id="calendarGrid"></div>
+          </section>
+          <p class="record-count-note" id="recordCount"></p>
+          <div class="record-list" id="recordList"></div>
+        </section>
+      </div>
+    </section>
+  </main>
+
+  <div class="toast" id="toast" role="status">已完成</div>
+
+  <script>
+    const KM_PER_MILE = 1.609344;
+    const CALC_STORAGE_KEY = "pace-calculator-state-v2";
+    const RECORD_STORAGE_KEY = "pace-run-records-v1";
+    const PREF_STORAGE_KEY = "pace-run-preferences-v1";
+    const DEFAULT_CALC_STATE = {
+      mode: "pace",
+      unit: "km",
+      distance: "5",
+      hours: "0",
+      minutes: "25",
+      seconds: "0",
+      paceMinutes: "5",
+      paceSeconds: "0"
+    };
+    const DEFAULT_PREF_STATE = {
+      theme: "light",
+      search: "",
+      surfaceFilter: "all",
+      rangeFilter: "all",
+      sort: "date-desc",
+      calendarMonth: ""
+    };
+
+    const presetDistances = [
+      { key: "one", labelKm: "1K", labelMi: "1 mi", km: 1, mi: 1 },
+      { key: "five", labelKm: "5K", labelMi: "5K", km: 5 },
+      { key: "ten", labelKm: "10K", labelMi: "10K", km: 10 },
+      { key: "half", labelKm: "半馬", labelMi: "半馬", km: 21.0975 },
+      { key: "full", labelKm: "全馬", labelMi: "全馬", km: 42.195 }
+    ];
+
+    const calcState = loadJson(CALC_STORAGE_KEY, DEFAULT_CALC_STATE);
+    const prefState = { ...DEFAULT_PREF_STATE, ...loadJson(PREF_STORAGE_KEY, DEFAULT_PREF_STATE) };
+    if (!prefState.calendarMonth) prefState.calendarMonth = monthKey(new Date());
+    let records = loadJson(RECORD_STORAGE_KEY, []);
+    let editingRecordId = null;
+    let pendingSummaryBonus = null;
+    let pendingNewRecordId = null;
+    let pendingUndoDelete = null;
+    let previousSummaryMetrics = null;
+    let pendingCalendarMotion = "";
+    const motionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+    const $ = (selector) => document.querySelector(selector);
+    const $$ = (selector) => [...document.querySelectorAll(selector)];
+
+    const els = {
+      views: {
+        calculator: $("#calculatorView"),
+        records: $("#recordsView")
+      },
+      viewButtons: $$("[data-view]"),
+      modeButtons: $$("[data-mode]"),
+      unitButtons: $$("[data-unit]"),
+      themeToggle: $("#themeToggle"),
+      distanceField: $("#distanceField"),
+      timeField: $("#timeField"),
+      paceField: $("#paceField"),
+      distanceInput: $("#distanceInput"),
+      hoursInput: $("#hoursInput"),
+      minutesInput: $("#minutesInput"),
+      secondsInput: $("#secondsInput"),
+      paceMinutesInput: $("#paceMinutesInput"),
+      paceSecondsInput: $("#paceSecondsInput"),
+      distanceUnit: $("#distanceUnit"),
+      timeLabel: $("#timeLabel"),
+      paceLabel: $("#paceLabel"),
+      presets: $("#presets"),
+      resultKicker: $("#resultKicker"),
+      resultMain: $("#resultMain"),
+      resultUnit: $("#resultUnit"),
+      resultSub: $("#resultSub"),
+      splitGrid: $("#splitGrid"),
+      copyButton: $("#copyButton"),
+      resetButton: $("#resetButton"),
+      clearDistance: $("#clearDistance"),
+      useCalcButton: $("#useCalcButton"),
+      converterPace: $("#converterPace"),
+      converterSpeed: $("#converterSpeed"),
+      converterPaceUnit: $("#converterPaceUnit"),
+      converterSpeedUnit: $("#converterSpeedUnit"),
+      clearConverterButton: $("#clearConverterButton"),
+      summaryGrid: $("#summaryGrid"),
+      recordForm: $("#recordForm"),
+      recordFormTitle: $("#recordFormTitle"),
+      newRecordButton: $("#newRecordButton"),
+      recordDate: $("#recordDate"),
+      recordTitle: $("#recordTitle"),
+      recordSurface: $("#recordSurface"),
+      recordDistance: $("#recordDistance"),
+      recordUnit: $("#recordUnit"),
+      recordDuration: $("#recordDuration"),
+      recordPace: $("#recordPace"),
+      recordKilometerPaces: $("#recordKilometerPaces"),
+      recordCalories: $("#recordCalories"),
+      recordHeartRate: $("#recordHeartRate"),
+      recordMaxHeartRate: $("#recordMaxHeartRate"),
+      recordCadence: $("#recordCadence"),
+      recordZone1: $("#recordZone1"),
+      recordZone2: $("#recordZone2"),
+      recordZone3: $("#recordZone3"),
+      recordZone4: $("#recordZone4"),
+      recordZone5: $("#recordZone5"),
+      recordTemperature: $("#recordTemperature"),
+      recordHumidity: $("#recordHumidity"),
+      recordWindSpeed: $("#recordWindSpeed"),
+      recordWindDirection: $("#recordWindDirection"),
+      recordNotes: $("#recordNotes"),
+      parseTextButton: $("#parseTextButton"),
+      ocrText: $("#ocrText"),
+      saveRecordButton: $("#saveRecordButton"),
+      backupButton: $("#backupButton"),
+      importInput: $("#importInput"),
+      exportButton: $("#exportButton"),
+      recordSearch: $("#recordSearch"),
+      recordSurfaceFilter: $("#recordSurfaceFilter"),
+      recordRangeFilter: $("#recordRangeFilter"),
+      recordSort: $("#recordSort"),
+      volumeGrid: $("#volumeGrid"),
+      pbGrid: $("#pbGrid"),
+      analysisGrid: $("#analysisGrid"),
+      calendarGrid: $("#calendarGrid"),
+      calendarLabel: $("#calendarLabel"),
+      calendarPrev: $("#calendarPrev"),
+      calendarNext: $("#calendarNext"),
+      recordCount: $("#recordCount"),
+      recordList: $("#recordList"),
+      toast: $("#toast")
+    };
+
+    applyTheme(prefState.theme);
+    hydrateCalculator();
+    hydrateRecordControls();
+    resetRecordForm();
+    renderAll();
+
+    els.viewButtons.forEach((button) => {
+      button.addEventListener("click", () => showView(button.dataset.view));
+    });
+
+    els.modeButtons.forEach((button) => {
+      button.addEventListener("click", () => {
+        calcState.mode = button.dataset.mode;
+        saveCalc();
+      });
+    });
+
+    els.unitButtons.forEach((button) => {
+      button.addEventListener("click", () => {
+        if (calcState.unit === button.dataset.unit) return;
+        const previousUnit = calcState.unit;
+        convertCalcUnit(button.dataset.unit);
+        convertConverterUnit(previousUnit, button.dataset.unit);
+        saveCalc();
+      });
+    });
+
+    els.themeToggle.addEventListener("click", () => {
+      const nextTheme = prefState.theme === "dark" ? "light" : "dark";
+      animateThemeChange(nextTheme);
+      savePrefs();
+    });
+
+    [
+      els.distanceInput,
+      els.hoursInput,
+      els.minutesInput,
+      els.secondsInput,
+      els.paceMinutesInput,
+      els.paceSecondsInput
+    ].forEach((input) => {
+      input.addEventListener("input", () => {
+        calcState[inputStateKey(input)] = input.value;
+        saveCalc();
+      });
+    });
+
+    els.copyButton.addEventListener("click", copyResult);
+    els.clearDistance.addEventListener("click", () => {
+      calcState.distance = "";
+      saveCalc();
+      els.distanceInput.focus();
+    });
+    els.resetButton.addEventListener("click", () => {
+      Object.assign(calcState, DEFAULT_CALC_STATE);
+      hydrateCalculator();
+      saveCalc();
+    });
+    els.useCalcButton.addEventListener("click", fillRecordFromCalculator);
+    els.converterPace.addEventListener("input", updateConverterFromPace);
+    els.converterSpeed.addEventListener("input", updateConverterFromSpeed);
+    els.clearConverterButton.addEventListener("click", clearConverter);
+
+    els.recordUnit.addEventListener("change", () => {
+      updateRecordPace();
+    });
+    [els.recordDistance, els.recordDuration].forEach((input) => {
+      input.addEventListener("input", updateRecordPace);
+    });
+    els.recordForm.addEventListener("submit", saveRecordFromForm);
+    els.newRecordButton.addEventListener("click", resetRecordForm);
+    els.parseTextButton.addEventListener("click", () => applyParsedText(els.ocrText.value));
+    els.backupButton.addEventListener("click", exportBackup);
+    els.importInput.addEventListener("change", importBackup);
+    els.exportButton.addEventListener("click", exportCsv);
+    els.recordSearch.addEventListener("input", () => {
+      prefState.search = els.recordSearch.value;
+      savePrefs();
+      renderRecords();
+    });
+    els.recordSurfaceFilter.addEventListener("change", () => {
+      prefState.surfaceFilter = els.recordSurfaceFilter.value;
+      savePrefs();
+      renderRecords();
+    });
+    els.recordRangeFilter.addEventListener("change", () => {
+      prefState.rangeFilter = els.recordRangeFilter.value;
+      savePrefs();
+      renderRecords();
+    });
+    els.recordSort.addEventListener("change", () => {
+      prefState.sort = els.recordSort.value;
+      savePrefs();
+      renderRecords();
+    });
+    els.calendarPrev.addEventListener("click", () => shiftCalendarMonth(-1));
+    els.calendarNext.addEventListener("click", () => shiftCalendarMonth(1));
+
+    function showView(view) {
+      const next = els.views[view];
+      if (!next) return;
+      const currentEntry = Object.entries(els.views).find(([, section]) => !section.hidden);
+      const current = currentEntry?.[1];
+      els.viewButtons.forEach((button) => {
+        button.classList.toggle("active", button.dataset.view === view);
+      });
+
+      if (!current || current === next || motionQuery.matches) {
+        Object.entries(els.views).forEach(([key, section]) => {
+          section.hidden = key !== view;
+          section.classList.remove("view-enter", "view-exit");
+        });
+        return;
+      }
+
+      current.classList.remove("view-enter");
+      current.classList.add("view-exit");
+      next.hidden = false;
+      next.classList.remove("view-exit");
+      next.classList.add("view-enter");
+
+      current.addEventListener("animationend", () => {
+        current.hidden = true;
+        current.classList.remove("view-exit");
+      }, { once: true });
+      next.addEventListener("animationend", () => {
+        next.classList.remove("view-enter");
+      }, { once: true });
+    }
+
+    function loadJson(key, fallback) {
+      try {
+        const parsed = JSON.parse(localStorage.getItem(key) || "null");
+        return parsed == null ? structuredClone(fallback) : parsed;
+      } catch {
+        return structuredClone(fallback);
+      }
+    }
+
+    function saveJson(key, value) {
+      try {
+        localStorage.setItem(key, JSON.stringify(value));
+        return true;
+      } catch {
+        showToast("儲存空間不足");
+        return false;
+      }
+    }
+
+    function saveCalc() {
+      saveJson(CALC_STORAGE_KEY, calcState);
+      hydrateCalculator();
+      renderCalculator();
+    }
+
+    function saveRecords() {
+      const saved = saveJson(RECORD_STORAGE_KEY, records);
+      if (saved) {
+        renderRecords();
+      }
+      return saved;
+    }
+
+    function savePrefs() {
+      saveJson(PREF_STORAGE_KEY, prefState);
+    }
+
+    function applyTheme(theme) {
+      const activeTheme = theme === "dark" ? "dark" : "light";
+      prefState.theme = activeTheme;
+      document.documentElement.dataset.theme = activeTheme;
+      const isDark = activeTheme === "dark";
+      els.themeToggle.setAttribute("aria-pressed", String(isDark));
+      els.themeToggle.setAttribute("aria-label", isDark ? "淺色模式" : "深色模式");
+      els.themeToggle.title = isDark ? "淺色模式" : "深色模式";
+      document.querySelector('meta[name="theme-color"]')?.setAttribute("content", isDark ? "#000000" : "#F5F7FA");
+    }
+
+    function animateThemeChange(theme) {
+      const nextTheme = theme === "dark" ? "dark" : "light";
+      prefState.theme = nextTheme;
+      if (motionQuery.matches) {
+        applyTheme(nextTheme);
+        return;
+      }
+
+      const wipe = document.createElement("div");
+      wipe.className = "theme-wipe";
+      wipe.setAttribute("aria-hidden", "true");
+      const currentBg = getComputedStyle(document.documentElement).getPropertyValue("--bg").trim() || (prefState.theme === "dark" ? "#000000" : "#F5F7FA");
+      wipe.style.setProperty("--wipe-color", currentBg);
+      document.body.appendChild(wipe);
+      wipe.getBoundingClientRect();
+      applyTheme(nextTheme);
+      wipe.addEventListener("animationend", () => wipe.remove(), { once: true });
+      window.setTimeout(() => wipe.remove(), 700);
+    }
+
+    function hydrateRecordControls() {
+      els.recordSearch.value = prefState.search || "";
+      els.recordSurfaceFilter.value = prefState.surfaceFilter || "all";
+      els.recordRangeFilter.value = prefState.rangeFilter || "all";
+      els.recordSort.value = prefState.sort || "date-desc";
+    }
+
+    function shiftCalendarMonth(delta) {
+      const date = monthDate(prefState.calendarMonth);
+      date.setMonth(date.getMonth() + delta);
+      prefState.calendarMonth = monthKey(date);
+      pendingCalendarMotion = delta > 0 ? "next" : "prev";
+      savePrefs();
+      renderCalendar();
+    }
+
+    function inputStateKey(input) {
+      return {
+        distanceInput: "distance",
+        hoursInput: "hours",
+        minutesInput: "minutes",
+        secondsInput: "seconds",
+        paceMinutesInput: "paceMinutes",
+        paceSecondsInput: "paceSeconds"
+      }[input.id];
+    }
+
+    function hydrateCalculator() {
+      els.distanceInput.value = calcState.distance;
+      els.hoursInput.value = calcState.hours;
+      els.minutesInput.value = calcState.minutes;
+      els.secondsInput.value = calcState.seconds;
+      els.paceMinutesInput.value = calcState.paceMinutes;
+      els.paceSecondsInput.value = calcState.paceSeconds;
+    }
+
+    function renderAll() {
+      renderCalculator();
+      renderRecords();
+    }
+
+    function renderCalculator() {
+      els.modeButtons.forEach((button) => {
+        button.classList.toggle("active", button.dataset.mode === calcState.mode);
+      });
+      els.unitButtons.forEach((button) => {
+        button.classList.toggle("active", button.dataset.unit === calcState.unit);
+      });
+
+      els.distanceField.classList.toggle("hidden", calcState.mode === "distance");
+      els.timeField.classList.toggle("hidden", calcState.mode === "finish");
+      els.paceField.classList.toggle("hidden", calcState.mode === "pace");
+      els.distanceUnit.textContent = calcState.unit;
+      els.timeLabel.textContent = "時間";
+      els.paceLabel.textContent = `配速 /${calcState.unit}`;
+      renderConverterLabels();
+
+      renderPresets();
+
+      const result = calculate();
+      els.resultKicker.textContent = result.kicker;
+      els.resultMain.textContent = result.main;
+      els.resultUnit.textContent = result.unit;
+      els.resultSub.textContent = result.sub;
+      els.copyButton.disabled = !result.valid;
+      els.copyButton.dataset.copy = result.copy;
+
+      renderSplits(result.paceSeconds);
+    }
+
+    function renderPresets() {
+      els.presets.innerHTML = "";
+      presetDistances.forEach((preset) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.textContent = calcState.unit === "km" ? preset.labelKm : preset.labelMi;
+        button.dataset.key = preset.key;
+        const distance = presetValue(preset);
+        button.classList.toggle("active", Math.abs(number(calcState.distance) - distance) < 0.01);
+        button.addEventListener("click", () => {
+          calcState.distance = formatDistanceInput(distance);
+          saveCalc();
+        });
+        els.presets.appendChild(button);
+      });
+    }
+
+    function renderSplits(paceSeconds) {
+      els.splitGrid.innerHTML = "";
+      presetDistances.forEach((preset) => {
+        const distance = presetValue(preset);
+        const split = document.createElement("div");
+        split.className = "split-item";
+        split.innerHTML = `
+          <div class="split-distance">${calcState.unit === "km" ? preset.labelKm : preset.labelMi}</div>
+          <div class="split-time">${paceSeconds > 0 ? formatDuration(distance * paceSeconds) : "--"}</div>
+        `;
+        els.splitGrid.appendChild(split);
+      });
+    }
+
+    function calculate() {
+      const distance = number(calcState.distance);
+      const duration = calcTimeSeconds();
+      const pace = calcPaceSeconds();
+      const unitText = calcState.unit;
+      const empty = {
+        valid: false,
+        paceSeconds: 0,
+        distance,
+        duration,
+        main: "--",
+        unit: "",
+        sub: " ",
+        copy: ""
+      };
+
+      if (calcState.mode === "pace") {
+        if (distance <= 0 || duration <= 0) {
+          return { ...empty, kicker: `每${unitName()}配速` };
+        }
+        const calculatedPace = duration / distance;
+        return {
+          valid: true,
+          paceSeconds: calculatedPace,
+          distance,
+          duration,
+          kicker: `每${unitName()}配速`,
+          main: formatPace(calculatedPace),
+          unit: `/${unitText}`,
+          sub: `${formatDistance(distance)} ${unitText} · ${formatDuration(duration)}`,
+          copy: `${formatPace(calculatedPace)} /${unitText} (${formatDistance(distance)} ${unitText}, ${formatDuration(duration)})`
+        };
+      }
+
+      if (calcState.mode === "finish") {
+        if (distance <= 0 || pace <= 0) {
+          return { ...empty, kicker: "完賽時間" };
+        }
+        const finishSeconds = distance * pace;
+        return {
+          valid: true,
+          paceSeconds: pace,
+          distance,
+          duration: finishSeconds,
+          kicker: "完賽時間",
+          main: formatDuration(finishSeconds),
+          unit: "",
+          sub: `${formatDistance(distance)} ${unitText} · ${formatPace(pace)} /${unitText}`,
+          copy: `${formatDuration(finishSeconds)} (${formatDistance(distance)} ${unitText}, ${formatPace(pace)} /${unitText})`
+        };
+      }
+
+      if (duration <= 0 || pace <= 0) {
+        return { ...empty, kicker: "可跑距離" };
+      }
+      const possibleDistance = duration / pace;
+      return {
+        valid: true,
+        paceSeconds: pace,
+        distance: possibleDistance,
+        duration,
+        kicker: "可跑距離",
+        main: formatDistance(possibleDistance),
+        unit: unitText,
+        sub: `${formatDuration(duration)} · ${formatPace(pace)} /${unitText}`,
+        copy: `${formatDistance(possibleDistance)} ${unitText} (${formatDuration(duration)}, ${formatPace(pace)} /${unitText})`
+      };
+    }
+
+    function presetValue(preset) {
+      if (calcState.unit === "km") return preset.km;
+      return preset.mi || preset.km / KM_PER_MILE;
+    }
+
+    function unitName() {
+      return calcState.unit === "km" ? "公里" : "英里";
+    }
+
+    function convertCalcUnit(nextUnit) {
+      const previousUnit = calcState.unit;
+      calcState.unit = nextUnit;
+
+      const distance = number(calcState.distance);
+      if (distance > 0) {
+        calcState.distance = formatDistanceInput(previousUnit === "km" ? distance / KM_PER_MILE : distance * KM_PER_MILE);
+      }
+
+      const pace = calcPaceSeconds();
+      if (pace > 0) {
+        const convertedPace = previousUnit === "km" ? pace * KM_PER_MILE : pace / KM_PER_MILE;
+        setCalcPace(convertedPace);
+      }
+    }
+
+    function renderConverterLabels() {
+      els.converterPaceUnit.textContent = calcState.unit;
+      els.converterSpeedUnit.textContent = `${calcState.unit}/h`;
+    }
+
+    function updateConverterFromPace() {
+      const paceSeconds = parseTimeToSeconds(els.converterPace.value);
+      if (paceSeconds > 0) {
+        els.converterSpeed.value = formatSpeed(3600 / paceSeconds);
+      } else if (!els.converterPace.value.trim()) {
+        els.converterSpeed.value = "";
+      }
+    }
+
+    function updateConverterFromSpeed() {
+      const speed = number(els.converterSpeed.value);
+      if (speed > 0) {
+        els.converterPace.value = formatPace(3600 / speed);
+      } else if (!els.converterSpeed.value.trim()) {
+        els.converterPace.value = "";
+      }
+    }
+
+    function convertConverterUnit(previousUnit, nextUnit) {
+      if (previousUnit === nextUnit) return;
+
+      const paceSeconds = parseTimeToSeconds(els.converterPace.value);
+      if (paceSeconds > 0) {
+        const convertedPace = previousUnit === "km" ? paceSeconds * KM_PER_MILE : paceSeconds / KM_PER_MILE;
+        els.converterPace.value = formatPace(convertedPace);
+      }
+
+      const speed = number(els.converterSpeed.value);
+      if (speed > 0) {
+        const convertedSpeed = previousUnit === "km" ? speed / KM_PER_MILE : speed * KM_PER_MILE;
+        els.converterSpeed.value = formatSpeed(convertedSpeed);
+      } else if (paceSeconds > 0) {
+        els.converterSpeed.value = formatSpeed(3600 / parseTimeToSeconds(els.converterPace.value));
+      }
+    }
+
+    function clearConverter() {
+      els.converterPace.value = "";
+      els.converterSpeed.value = "";
+      els.converterPace.focus();
+    }
+
+    function setCalcPace(totalSeconds) {
+      const seconds = Math.max(0, Math.round(totalSeconds));
+      calcState.paceMinutes = String(Math.floor(seconds / 60));
+      calcState.paceSeconds = String(seconds % 60);
+    }
+
+    function number(value) {
+      const parsed = Number.parseFloat(String(value).replace(",", "."));
+      return Number.isFinite(parsed) ? parsed : 0;
+    }
+
+    function optionalNumber(value) {
+      const text = String(value ?? "").trim();
+      if (!text) return "";
+      const parsed = Number.parseFloat(text.replace(",", "."));
+      return Number.isFinite(parsed) ? parsed : "";
+    }
+
+    function optionalInteger(value) {
+      const parsed = optionalNumber(value);
+      return parsed === "" ? "" : Math.max(0, Math.round(parsed));
+    }
+
+    function optionalPercent(value) {
+      const parsed = optionalNumber(value);
+      if (parsed === "") return "";
+      return roundDecimal(Math.min(100, Math.max(0, parsed)), 2);
+    }
+
+    function roundDecimal(value, places = 2) {
+      return Number(value.toFixed(places));
+    }
+
+    function calcTimeSeconds() {
+      return Math.max(0, number(calcState.hours)) * 3600
+        + Math.max(0, number(calcState.minutes)) * 60
+        + Math.max(0, number(calcState.seconds));
+    }
+
+    function calcPaceSeconds() {
+      return Math.max(0, number(calcState.paceMinutes)) * 60
+        + Math.max(0, number(calcState.paceSeconds));
+    }
+
+    function formatPace(totalSeconds) {
+      const seconds = Math.max(0, Math.round(totalSeconds));
+      const minutes = Math.floor(seconds / 60);
+      const remainder = seconds % 60;
+      return `${minutes}:${String(remainder).padStart(2, "0")}`;
+    }
+
+    function formatSpeed(value) {
+      if (!Number.isFinite(value) || value <= 0) return "";
+      return value.toFixed(1);
+    }
+
+    function formatDuration(totalSeconds) {
+      const seconds = Math.max(0, Math.round(totalSeconds));
+      const hours = Math.floor(seconds / 3600);
+      const minutes = Math.floor((seconds % 3600) / 60);
+      const remainder = seconds % 60;
+
+      if (hours > 0) {
+        return `${hours}:${String(minutes).padStart(2, "0")}:${String(remainder).padStart(2, "0")}`;
+      }
+      return `${minutes}:${String(remainder).padStart(2, "0")}`;
+    }
+
+    function formatDistance(distance) {
+      if (distance >= 100) return distance.toFixed(1);
+      return distance.toFixed(2);
+    }
+
+    function formatDistanceInput(distance) {
+      if (distance >= 100) return distance.toFixed(1);
+      return distance.toFixed(2).replace(/\.00$/, "");
+    }
+
+    function parseTimeToSeconds(value) {
+      const text = String(value || "").trim().replace(/[：]/g, ":");
+      if (!text) return 0;
+
+      const apostrophe = text.match(/^(\d{1,2})\s*['’′]\s*(\d{1,2})/);
+      if (apostrophe) {
+        return Number(apostrophe[1]) * 60 + Number(apostrophe[2]);
+      }
+
+      const parts = text.split(":").map((part) => Number(part));
+      if (parts.some((part) => !Number.isFinite(part))) return 0;
+      if (parts.length === 2) return parts[0] * 60 + parts[1];
+      if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2];
+      return 0;
+    }
+
+    function formatIsoDate(date) {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const day = String(date.getDate()).padStart(2, "0");
+      return `${year}-${month}-${day}`;
+    }
+
+    function parseIsoDate(value) {
+      const match = String(value || "").match(/^(\d{4})-(\d{2})-(\d{2})$/);
+      if (!match) return null;
+      return new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
+    }
+
+    function monthKey(date) {
+      return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+    }
+
+    function monthDate(key) {
+      const match = String(key || "").match(/^(\d{4})-(\d{2})$/);
+      if (!match) {
+        const today = new Date();
+        return new Date(today.getFullYear(), today.getMonth(), 1);
+      }
+      return new Date(Number(match[1]), Number(match[2]) - 1, 1);
+    }
+
+    function startOfWeek(date) {
+      const start = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+      const offset = (start.getDay() + 6) % 7;
+      start.setDate(start.getDate() - offset);
+      return start;
+    }
+
+    function endOfDay(date) {
+      return new Date(date.getFullYear(), date.getMonth(), date.getDate(), 23, 59, 59, 999);
+    }
+
+    function todayIso(offsetDays = 0) {
+      const date = new Date();
+      date.setDate(date.getDate() + offsetDays);
+      return formatIsoDate(date);
+    }
+
+    async function copyResult() {
+      const text = els.copyButton.dataset.copy;
+      if (!text) return;
+      try {
+        await navigator.clipboard.writeText(text);
+      } catch {
+        const area = document.createElement("textarea");
+        area.value = text;
+        document.body.appendChild(area);
+        area.select();
+        document.execCommand("copy");
+        area.remove();
+      }
+      showToast("已複製");
+    }
+
+    function fillRecordFromCalculator() {
+      const result = calculate();
+      if (!result.valid || result.distance <= 0 || result.duration <= 0) {
+        showToast("目前沒有可加入的結果");
+        return;
+      }
+
+      resetRecordForm();
+      els.recordDate.value = todayIso();
+      els.recordTitle.value = "跑步";
+      els.recordDistance.value = formatDistanceInput(result.distance);
+      els.recordUnit.value = calcState.unit;
+      els.recordDuration.value = formatDuration(result.duration);
+      els.recordPace.value = formatPace(result.paceSeconds);
+      showView("records");
+      showToast("已帶入計算結果");
+    }
+
+    function resetRecordForm() {
+      editingRecordId = null;
+      els.recordForm.reset();
+      els.recordDate.value = todayIso();
+      els.recordTitle.value = "跑步";
+      els.recordSurface.value = "outdoor";
+      els.recordUnit.value = calcState.unit;
+      els.ocrText.value = "";
+      els.recordFormTitle.textContent = "新增紀錄";
+      els.saveRecordButton.lastChild.textContent = " 儲存紀錄";
+    }
+
+    function updateRecordPace() {
+      const distance = number(els.recordDistance.value);
+      const duration = parseTimeToSeconds(els.recordDuration.value);
+      if (distance > 0 && duration > 0 && !els.recordPace.value.trim()) {
+        els.recordPace.value = formatPace(duration / distance);
+      }
+    }
+
+    function saveRecordFromForm(event) {
+      event.preventDefault();
+      const distance = number(els.recordDistance.value);
+      const durationSeconds = parseTimeToSeconds(els.recordDuration.value);
+      const paceSeconds = parseTimeToSeconds(els.recordPace.value) || (distance > 0 ? durationSeconds / distance : 0);
+      const avgHeartRate = optionalInteger(els.recordHeartRate.value);
+      const maxHeartRate = optionalInteger(els.recordMaxHeartRate.value);
+
+      if (!els.recordDate.value || distance <= 0 || durationSeconds <= 0) {
+        showToast("日期、距離、時間要填");
+        return;
+      }
+
+      const record = {
+        id: editingRecordId || makeId(),
+        date: els.recordDate.value,
+        title: els.recordTitle.value.trim() || "跑步",
+        surface: els.recordSurface.value,
+        distance,
+        unit: els.recordUnit.value,
+        durationSeconds,
+        averagePaceSeconds: paceSeconds,
+        paceSeconds,
+        kilometerPaces: els.recordKilometerPaces.value.trim(),
+        calories: Math.max(0, Math.round(number(els.recordCalories.value))) || "",
+        avgHeartRate,
+        heartRate: avgHeartRate,
+        maxHeartRate,
+        cadence: optionalInteger(els.recordCadence.value),
+        heartRateZones: [
+          optionalPercent(els.recordZone1.value),
+          optionalPercent(els.recordZone2.value),
+          optionalPercent(els.recordZone3.value),
+          optionalPercent(els.recordZone4.value),
+          optionalPercent(els.recordZone5.value)
+        ],
+        weather: {
+          temperature: optionalNumber(els.recordTemperature.value),
+          humidity: optionalPercent(els.recordHumidity.value),
+          windSpeed: optionalNumber(els.recordWindSpeed.value),
+          windDirection: els.recordWindDirection.value.trim()
+        },
+        notes: els.recordNotes.value.trim(),
+        createdAt: editingRecordId ? (records.find((item) => item.id === editingRecordId)?.createdAt || new Date().toISOString()) : new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+
+      if (editingRecordId) {
+        records = records.map((item) => item.id === editingRecordId ? record : item);
+      } else {
+        records = [record, ...records];
+        pendingSummaryBonus = {
+          count: 1,
+          distanceKm: toKm(record.distance, record.unit)
+        };
+        pendingNewRecordId = record.id;
+      }
+
+      if (!saveRecords()) {
+        pendingSummaryBonus = null;
+        pendingNewRecordId = null;
+        return;
+      }
+      resetRecordForm();
+      showToast("已儲存紀錄");
+    }
+
+    function applyParsedText(text) {
+      const parsed = parseRunText(text);
+      let applied = 0;
+
+      if (parsed.date) {
+        els.recordDate.value = parsed.date;
+        applied += 1;
+      }
+      if (parsed.title) {
+        els.recordTitle.value = parsed.title;
+        applied += 1;
+      }
+      if (parsed.distance) {
+        els.recordDistance.value = formatDistanceInput(parsed.distance);
+        applied += 1;
+      }
+      if (parsed.unit) {
+        els.recordUnit.value = parsed.unit;
+        applied += 1;
+      }
+      if (parsed.durationSeconds) {
+        els.recordDuration.value = formatDuration(parsed.durationSeconds);
+        applied += 1;
+      }
+      if (parsed.paceSeconds) {
+        els.recordPace.value = formatPace(parsed.paceSeconds);
+        applied += 1;
+      }
+      if (parsed.kilometerPaces) {
+        els.recordKilometerPaces.value = parsed.kilometerPaces;
+        applied += 1;
+      }
+      if (parsed.calories) {
+        els.recordCalories.value = parsed.calories;
+        applied += 1;
+      }
+      if (parsed.heartRate) {
+        els.recordHeartRate.value = parsed.heartRate;
+        applied += 1;
+      }
+      if (parsed.maxHeartRate) {
+        els.recordMaxHeartRate.value = parsed.maxHeartRate;
+        applied += 1;
+      }
+      if (parsed.cadence) {
+        els.recordCadence.value = parsed.cadence;
+        applied += 1;
+      }
+      if (parsed.heartRateZones.some((value) => value !== "")) {
+        [els.recordZone1, els.recordZone2, els.recordZone3, els.recordZone4, els.recordZone5].forEach((input, index) => {
+          if (parsed.heartRateZones[index] !== "") input.value = parsed.heartRateZones[index];
+        });
+        applied += 1;
+      }
+      if (parsed.weather.temperature !== "") {
+        els.recordTemperature.value = parsed.weather.temperature;
+        applied += 1;
+      }
+      if (parsed.weather.humidity !== "") {
+        els.recordHumidity.value = parsed.weather.humidity;
+        applied += 1;
+      }
+      if (parsed.weather.windSpeed !== "") {
+        els.recordWindSpeed.value = parsed.weather.windSpeed;
+        applied += 1;
+      }
+      if (parsed.weather.windDirection) {
+        els.recordWindDirection.value = parsed.weather.windDirection;
+        applied += 1;
+      }
+
+      showToast(applied ? "已填入欄位" : "沒有讀到可用欄位");
+    }
+
+    function parseRunText(rawText) {
+      const text = String(rawText || "")
+        .replace(/[，]/g, ".")
+        .replace(/[：]/g, ":")
+        .replace(/[′’]/g, "'")
+        .replace(/[″”]/g, "\"");
+      const lines = text.split(/\n+/).map((line) => line.trim()).filter(Boolean);
+      const compact = lines.join("\n");
+      const unit = /英里|\bmi\b/i.test(compact) ? "mi" : "km";
+      const distance = parseDistance(lines, compact);
+      const paceSeconds = parsePace(compact);
+      const durationSeconds = parseDuration(compact, distance, paceSeconds);
+      const title = lines.find((line) => /跑步|路跑|慢跑|晨跑|夜跑/.test(line) && line.length <= 28) || "";
+      const date = parseDate(compact);
+      const calories = numberNearLabel(lines, /卡路里|熱量|cal|kcal/i, 40, 3000);
+      const maxHeartRate = numberNearLabel(lines, /最大心率|最高心率|最大心跳|最高心跳|max(?:imum)?\s*(?:heart\s*rate|hr|bpm)|peak\s*(?:heart\s*rate|hr|bpm)/i, 35, 240);
+      const heartRate = numberNearLabel(lines, /平均心率|平均心跳|平均\s*bpm|avg(?:erage)?\s*(?:heart\s*rate|hr|bpm)|韻/i, 35, 230)
+        || numberNearLabel(lines.filter((line) => !/最大|最高|max|peak/i.test(line)), /心率|心跳|bpm/i, 35, 230);
+      const cadence = numberNearLabel(lines, /步頻|步數\/分|spm|cadence/i, 80, 240);
+      const kilometerPaces = parseKilometerPaces(lines);
+      const heartRateZones = parseZonePercentages(lines, compact);
+      const weather = parseWeather(lines, compact);
+
+      return {
+        date,
+        title,
+        distance,
+        unit,
+        durationSeconds,
+        paceSeconds,
+        kilometerPaces,
+        calories,
+        heartRate,
+        maxHeartRate,
+        cadence,
+        heartRateZones,
+        weather
+      };
+    }
+
+    function parseKilometerPaces(lines) {
+      const splits = [];
+      const markerIndex = lines.findIndex((line) => /分段|每公里|平均配速/i.test(line));
+      const startIndex = markerIndex >= 0 ? markerIndex + 1 : 0;
+      for (let index = startIndex; index < lines.length; index += 1) {
+        const inline = lines[index].match(/^(\d+(?:\.\d+)?)\s*(?:公里|km|mi|英里|K)?\s+(\d{1,2})[:'′’](\d{2})/i);
+        if (inline) {
+          splits.push(`${inline[1]}K ${inline[2]}:${inline[3]}`);
+          continue;
+        }
+
+        const distance = lines[index].match(/^(\d+(?:\.\d+)?)$/);
+        if (!distance || /^(公里|km|英里|mi)$/i.test(lines[index + 1] || "")) continue;
+        if (number(distance[1]) > 60) continue;
+
+        const paceLine = [lines[index + 1], lines[index + 2]]
+          .filter(Boolean)
+          .map((line) => line.match(/(\d{1,2})[:'′’](\d{2})/))
+          .find(Boolean);
+        if (paceLine) {
+          const label = distance[1].includes(".") ? distance[1] : `${distance[1]}K`;
+          splits.push(`${label} ${paceLine[1]}:${paceLine[2]}`);
+        }
+      }
+      return splits.join("\n");
+    }
+
+    function parseZonePercentages(lines, compact) {
+      const zones = ["", "", "", "", ""];
+      for (let zone = 1; zone <= 5; zone += 1) {
+        const direct = compact.match(new RegExp(`(?:Z${zone}|區間\\s*${zone}|Zone\\s*${zone})[^\\d]{0,16}(\\d{1,3}(?:\\.\\d+)?)\\s*%`, "i"));
+        if (direct) zones[zone - 1] = optionalPercent(direct[1]);
+
+        for (let index = 0; index < lines.length && zones[zone - 1] === ""; index += 1) {
+          if (new RegExp(`^(?:Z${zone}|區間\\s*${zone}|Zone\\s*${zone})$`, "i").test(lines[index])) {
+            const neighbor = [lines[index + 1], lines[index - 1]].filter(Boolean).find((line) => /\d{1,3}(?:\.\d+)?\s*%?/.test(line));
+            if (neighbor) zones[zone - 1] = optionalPercent(neighbor.match(/\d{1,3}(?:\.\d+)?/)?.[0] || "");
+          }
+        }
+      }
+      return zones;
+    }
+
+    function parseWeather(lines, compact) {
+      const temperatureMatch = compact.match(/(?:氣溫|溫度|temperature|temp)[^\d-]*(-?\d+(?:\.\d+)?)\s*°?\s*C?/i)
+        || compact.match(/(-?\d+(?:\.\d+)?)\s*°\s*C?/i);
+      const humidityMatch = compact.match(/(?:濕度|humidity)[^\d]*(\d{1,3}(?:\.\d+)?)\s*%/i);
+      const windSpeedMatch = compact.match(/(?:風速|wind)[^\d]*(\d+(?:\.\d+)?)\s*(?:m\/s|km\/h|kph|mph)?/i);
+      const windDirectionMatch = compact.match(/(?:風向|wind direction)\s*[:：]?\s*(東北|東南|西北|西南|東|西|南|北|NNE|ENE|ESE|SSE|SSW|WSW|WNW|NNW|NE|SE|SW|NW|N|E|S|W)/i)
+        || lines.find((line) => /^(東北|東南|西北|西南|東|西|南|北|NNE|ENE|ESE|SSE|SSW|WSW|WNW|NNW|NE|SE|SW|NW|N|E|S|W)$/i.test(line));
+
+      return {
+        temperature: temperatureMatch ? optionalNumber(temperatureMatch[1]) : "",
+        humidity: humidityMatch ? optionalPercent(humidityMatch[1]) : "",
+        windSpeed: windSpeedMatch ? optionalNumber(windSpeedMatch[1]) : "",
+        windDirection: Array.isArray(windDirectionMatch) ? windDirectionMatch[1] : (windDirectionMatch || "")
+      };
+    }
+
+    function parseDistance(lines, compact) {
+      const inline = compact.match(/(\d+(?:\.\d+)?)\s*(公里|km|英里|mi)\b/i);
+      if (inline) return number(inline[1]);
+
+      for (let index = 0; index < lines.length; index += 1) {
+        if (/^(公里|km|英里|mi)$/i.test(lines[index]) && index > 0) {
+          const previousNumber = lines[index - 1].match(/^\d+(?:\.\d+)?$/);
+          if (previousNumber) return number(previousNumber[0]);
+        }
+      }
+
+      const decimalLine = lines.find((line) => /^\d{1,3}\.\d{1,3}$/.test(line));
+      return decimalLine ? number(decimalLine) : 0;
+    }
+
+    function parsePace(compact) {
+      const pace = compact.match(/(\d{1,2})\s*'\s*(\d{2})\s*"?/);
+      if (pace) return Number(pace[1]) * 60 + Number(pace[2]);
+
+      const labeled = compact.match(/(?:配速|平均配速|pace)[^\d]*(\d{1,2})[:](\d{2})/i);
+      if (labeled) return Number(labeled[1]) * 60 + Number(labeled[2]);
+      return 0;
+    }
+
+    function parseDuration(compact, distance, paceSeconds) {
+      const matches = compact.match(/\b\d{1,2}:\d{2}(?::\d{2})?\b/g) || [];
+      const candidates = matches
+        .map((match) => ({ match, seconds: parseTimeToSeconds(match) }))
+        .filter((item) => item.seconds > 0 && item.seconds <= 16 * 3600);
+
+      if (!candidates.length) return 0;
+
+      if (distance > 0 && paceSeconds > 0) {
+        const expected = distance * paceSeconds;
+        candidates.sort((a, b) => Math.abs(a.seconds - expected) - Math.abs(b.seconds - expected));
+        return candidates[0].seconds;
+      }
+
+      candidates.sort((a, b) => b.seconds - a.seconds);
+      return candidates[0].seconds;
+    }
+
+    function parseDate(compact) {
+      if (/今天/.test(compact)) return todayIso();
+      if (/昨天/.test(compact)) return todayIso(-1);
+
+      const full = compact.match(/(20\d{2})[\/.-](\d{1,2})[\/.-](\d{1,2})/);
+      if (full) {
+        return `${full[1]}-${String(full[2]).padStart(2, "0")}-${String(full[3]).padStart(2, "0")}`;
+      }
+
+      const monthDay = compact.match(/(\d{1,2})[\/.-](\d{1,2})/);
+      if (monthDay) {
+        const year = new Date().getFullYear();
+        return `${year}-${String(monthDay[1]).padStart(2, "0")}-${String(monthDay[2]).padStart(2, "0")}`;
+      }
+      return "";
+    }
+
+    function numberNearLabel(lines, labelPattern, min, max) {
+      for (let index = 0; index < lines.length; index += 1) {
+        const line = lines[index];
+        const inline = line.match(new RegExp(`(\\d{1,5})\\s*(?:${labelPattern.source})`, labelPattern.flags));
+        if (inline) {
+          const value = Number(inline[1]);
+          if (value >= min && value <= max) return value;
+        }
+
+        if (labelPattern.test(line)) {
+          const neighbors = [lines[index + 1], lines[index - 1], lines[index + 2], lines[index - 2]].filter(Boolean);
+          for (const neighbor of neighbors) {
+            const match = neighbor.match(/-?\d{1,5}/);
+            if (match) {
+              const value = Number(match[0]);
+              if (value >= min && value <= max) return value;
+            }
+          }
+        }
+      }
+      return "";
+    }
+
+    function renderRecords() {
+      renderSummary();
+      renderInsights();
+      renderCalendar();
+      const visibleRecords = getVisibleRecords();
+      renderRecordCount(visibleRecords);
+      renderRecordList(visibleRecords);
+    }
+
+    function renderSummary() {
+      const totalKm = records.reduce((sum, record) => sum + toKm(record.distance, record.unit), 0);
+      const totalSeconds = records.reduce((sum, record) => sum + (record.durationSeconds || 0), 0);
+      const avgPace = totalKm > 0 ? totalSeconds / totalKm : 0;
+      const lastRun = [...records].sort((a, b) => String(b.date).localeCompare(String(a.date)))[0];
+      const previous = previousSummaryMetrics;
+      const items = [
+        { key: "count", label: "次數", value: `${records.length}`, numeric: records.length, formatter: (value) => `${Math.round(value)}` },
+        { key: "distance", label: "總距離", value: `${formatDistance(totalKm)} km`, numeric: totalKm, formatter: (value) => `${formatDistance(value)} km` },
+        { key: "", label: "平均配速", value: avgPace ? `${formatPace(avgPace)} /km` : "--" },
+        { key: "", label: "最近", value: lastRun ? lastRun.date.slice(5).replace("-", "/") : "--" }
+      ];
+
+      els.summaryGrid.innerHTML = "";
+      items.forEach(({ key, label, value, numeric, formatter }) => {
+        const item = document.createElement("div");
+        item.className = "summary-item";
+        item.dataset.summary = key;
+        const labelNode = document.createElement("div");
+        labelNode.className = "summary-label";
+        labelNode.textContent = label;
+        const valueNode = document.createElement("div");
+        valueNode.className = "summary-value";
+        valueNode.textContent = value;
+        item.append(labelNode, valueNode);
+        els.summaryGrid.appendChild(item);
+        if (key && previous && Number.isFinite(previous[key]) && Number.isFinite(numeric) && Math.abs(previous[key] - numeric) > 0.001 && !motionQuery.matches) {
+          valueNode.textContent = formatter(previous[key]);
+          valueNode.classList.add("is-counting");
+          requestAnimationFrame(() => animateNumber(valueNode, previous[key], numeric, formatter));
+        }
+      });
+      previousSummaryMetrics = { count: records.length, distance: totalKm };
+      flushSummaryBonus();
+    }
+
+    function animateNumber(node, from, to, formatter, duration = 420) {
+      const start = performance.now();
+      const tick = (now) => {
+        const progress = Math.min(1, (now - start) / duration);
+        const eased = 1 - Math.pow(1 - progress, 3);
+        node.textContent = formatter(from + (to - from) * eased);
+        if (progress < 1) {
+          requestAnimationFrame(tick);
+        } else {
+          node.textContent = formatter(to);
+          node.classList.remove("is-counting");
+        }
+      };
+      requestAnimationFrame(tick);
+    }
+
+    function flushSummaryBonus() {
+      if (!pendingSummaryBonus) return;
+      const bonus = pendingSummaryBonus;
+      pendingSummaryBonus = null;
+      spawnSummaryBonus("count", `+${bonus.count}`);
+      spawnSummaryBonus("distance", `+${formatBonusKm(bonus.distanceKm)}`);
+    }
+
+    function spawnSummaryBonus(key, text) {
+      const item = els.summaryGrid.querySelector(`[data-summary="${key}"]`);
+      if (!item) return;
+      item.classList.remove("is-bumped");
+      void item.offsetWidth;
+      item.classList.add("is-bumped");
+      item.addEventListener("animationend", () => item.classList.remove("is-bumped"), { once: true });
+      const pop = document.createElement("span");
+      pop.className = "summary-bonus";
+      pop.textContent = text;
+      item.appendChild(pop);
+      pop.addEventListener("animationend", () => pop.remove(), { once: true });
+      window.setTimeout(() => pop.remove(), 1000);
+    }
+
+    function formatBonusKm(km) {
+      const value = Number(km) || 0;
+      const text = value >= 10 ? value.toFixed(1) : value.toFixed(2);
+      return `${text.replace(/\.00$/, "")} km`;
+    }
+
+    function renderInsights() {
+      const today = new Date();
+      const weekStart = startOfWeek(today);
+      const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+      const yearStart = new Date(today.getFullYear(), 0, 1);
+      const weekStats = statsForRange(weekStart, endOfDay(today));
+      const monthStats = statsForRange(monthStart, endOfDay(today));
+      const yearStats = statsForRange(yearStart, endOfDay(today));
+      const averageStats = averageRunStats();
+
+      const volumeItems = [
+        { label: "本週", value: formatKm(weekStats.km), sub: volumeSub(weekStats), primary: true },
+        { label: "本月", value: formatKm(monthStats.km), sub: volumeSub(monthStats), primary: true },
+        { label: "本年", value: formatKm(yearStats.km), sub: volumeSub(yearStats), primary: false },
+        { label: "平均單次", value: formatKm(averageStats.km), sub: averageStats.count ? `${averageStats.count} 筆平均 · ${formatDuration(averageStats.seconds)}` : "尚無紀錄", primary: false }
+      ];
+
+      els.volumeGrid.innerHTML = volumeItems.map(({ label, value, sub, primary }) => `
+        <div class="insight-card${primary ? " primary" : ""}">
+          <div class="insight-label">${label}</div>
+          <div class="insight-value">${value}</div>
+          <div class="insight-sub">${sub}</div>
+        </div>
+      `).join("");
+
+      const fastest = bestRecord((record) => {
+        const pace = pacePerKm(record);
+        return pace > 0 ? pace : Infinity;
+      }, "min");
+      const longest = bestRecord((record) => toKm(record.distance || 0, record.unit), "max");
+      const best5k = bestDistanceRecord(5);
+      const best10k = bestDistanceRecord(10);
+      const pbItems = [
+        ["最快配速", fastest ? `${formatPace(pacePerKm(fastest))} /km` : "--", fastest ? `${formatRecordMeta(fastest)} · ${escapeHtml(fastest.title)}` : "尚無紀錄", fastest],
+        ["最長距離", longest ? `${formatKm(toKm(longest.distance, longest.unit))}` : "--", longest ? `${formatRecordMeta(longest)} · ${escapeHtml(longest.title)}` : "尚無紀錄", longest],
+        ["5K PB", best5k ? formatDuration(best5k.durationSeconds) : "--", best5k ? `${formatRecordMeta(best5k)} · ${formatPace(pacePerKm(best5k))} /km` : "距離接近 5K 才會出現", best5k],
+        ["10K PB", best10k ? formatDuration(best10k.durationSeconds) : "--", best10k ? `${formatRecordMeta(best10k)} · ${formatPace(pacePerKm(best10k))} /km` : "距離接近 10K 才會出現", best10k]
+      ];
+
+      els.pbGrid.innerHTML = pbItems.map(([label, value, sub, record]) => `
+        <div class="pb-card">
+          <div class="pb-label">${label}${isRecentRecord(record) ? ` <span class="pb-badge">NEW</span>` : ""}</div>
+          <div class="pb-value">${value}</div>
+          <div class="pb-sub">${sub}</div>
+        </div>
+      `).join("");
+
+      els.analysisGrid.innerHTML = renderAnalysisCards();
+      bindChartTooltips();
+    }
+
+    function renderCalendar() {
+      const month = monthDate(prefState.calendarMonth);
+      prefState.calendarMonth = monthKey(month);
+      const year = month.getFullYear();
+      const monthIndex = month.getMonth();
+      els.calendarLabel.textContent = `${year} 年 ${monthIndex + 1} 月`;
+
+      const byDate = records.reduce((map, record) => {
+        if (!record.date || monthKey(parseIsoDate(record.date) || new Date(0)) !== prefState.calendarMonth) return map;
+        const item = map.get(record.date) || { km: 0, count: 0 };
+        item.km += toKm(record.distance || 0, record.unit);
+        item.count += 1;
+        map.set(record.date, item);
+        return map;
+      }, new Map());
+      const maxDayKm = Math.max(0, ...[...byDate.values()].map((item) => item.km));
+
+      const weekdays = ["日", "一", "二", "三", "四", "五", "六"];
+      const daysInMonth = new Date(year, monthIndex + 1, 0).getDate();
+      const leading = new Date(year, monthIndex, 1).getDay();
+      const today = todayIso();
+      const cells = weekdays.map((day) => `<div class="calendar-weekday">${day}</div>`);
+
+      for (let index = 0; index < leading; index += 1) {
+        cells.push(`<div class="calendar-day" aria-hidden="true"></div>`);
+      }
+
+      for (let day = 1; day <= daysInMonth; day += 1) {
+        const date = `${year}-${String(monthIndex + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+        const stats = byDate.get(date);
+        const classes = ["calendar-day", stats ? "has-run" : "", date === today ? "today" : ""].filter(Boolean).join(" ");
+        const attrs = stats ? ` role="button" tabindex="0" data-calendar-date="${date}" title="${date} · ${formatKm(stats.km)}"` : "";
+        const style = stats ? ` style="${calendarRunStyle(stats.km, maxDayKm)}"` : "";
+        cells.push(`
+          <div class="${classes}"${attrs}${style}>
+            <span class="date">${day}</span>
+            ${stats ? `<span class="distance">${formatDistance(stats.km)}K</span>` : ""}
+          </div>
+        `);
+      }
+
+      els.calendarGrid.classList.remove("calendar-slide-next", "calendar-slide-prev");
+      els.calendarGrid.innerHTML = cells.join("");
+      if (pendingCalendarMotion && !motionQuery.matches) {
+        const className = pendingCalendarMotion === "next" ? "calendar-slide-next" : "calendar-slide-prev";
+        pendingCalendarMotion = "";
+        void els.calendarGrid.offsetWidth;
+        els.calendarGrid.classList.add(className);
+        els.calendarGrid.addEventListener("animationend", () => els.calendarGrid.classList.remove(className), { once: true });
+      } else {
+        pendingCalendarMotion = "";
+      }
+      els.calendarGrid.querySelectorAll("[data-calendar-date]").forEach((day) => {
+        day.addEventListener("click", () => pressCalendarDay(day, () => filterByCalendarDate(day.dataset.calendarDate)));
+        day.addEventListener("keydown", (event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            pressCalendarDay(day, () => filterByCalendarDate(day.dataset.calendarDate));
+          }
+        });
+      });
+    }
+
+    function pressCalendarDay(day, callback) {
+      if (motionQuery.matches) {
+        callback();
+        return;
+      }
+      day.classList.remove("calendar-press");
+      void day.offsetWidth;
+      day.classList.add("calendar-press");
+      window.setTimeout(callback, 130);
+      day.addEventListener("animationend", () => day.classList.remove("calendar-press"), { once: true });
+    }
+
+    function renderRecordCount(visibleRecords) {
+      els.recordCount.textContent = records.length ? `顯示 ${visibleRecords.length} / ${records.length} 筆` : "";
+    }
+
+    function renderRecordList(visibleRecords = getVisibleRecords()) {
+      els.recordList.innerHTML = "";
+      if (!records.length) {
+        const empty = document.createElement("div");
+        empty.className = "empty-state";
+        empty.textContent = "還沒有紀錄";
+        els.recordList.appendChild(empty);
+        return;
+      }
+      if (!visibleRecords.length) {
+        const empty = document.createElement("div");
+        empty.className = "empty-state";
+        empty.textContent = "沒有符合條件的紀錄";
+        els.recordList.appendChild(empty);
+        return;
+      }
+
+      visibleRecords
+        .forEach((record) => {
+          const card = document.createElement("article");
+          card.className = "record-card no-image";
+          if (record.id === pendingNewRecordId) card.classList.add("record-card-enter");
+          const averagePaceSeconds = getAveragePaceSeconds(record);
+          const avgHeartRate = getAverageHeartRate(record);
+          const maxHeartRate = getMaxHeartRate(record);
+          const detailsHtml = renderRecordDetails(record, avgHeartRate, maxHeartRate);
+          const detailsButtonHtml = detailsHtml ? `
+                <button type="button" class="icon-button details-toggle" data-toggle-details aria-label="額外資訊" title="額外資訊" aria-expanded="false">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="m6 9 6 6 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </button>
+          ` : "";
+
+          card.innerHTML = `
+            <div class="record-card-head">
+              <div>
+                <h3 class="record-title">${escapeHtml(record.title)}</h3>
+                <div class="record-meta">${formatRecordMeta(record)}</div>
+              </div>
+              <div class="record-card-actions">
+                <button type="button" class="icon-button" data-edit="${record.id}" aria-label="編輯" title="編輯">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="m4 20 4.4-1.1L19 8.3 15.7 5 5.1 15.6 4 20Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                  </svg>
+                </button>
+                <button type="button" class="icon-button" data-delete="${record.id}" aria-label="刪除" title="刪除">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="M6 7h12M10 11v6M14 11v6M9 7l1-2h4l1 2M8 7l1 13h6l1-13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </button>
+                ${detailsButtonHtml}
+              </div>
+            </div>
+            <div class="record-card-body">
+              <div>
+                <div class="record-stats">
+                  <div class="record-stat"><span class="record-mini">距離</span><strong>${formatDistance(record.distance)} ${record.unit}</strong></div>
+                  <div class="record-stat"><span class="record-mini">時間</span><strong>${formatDuration(record.durationSeconds)}</strong></div>
+                  <div class="record-stat"><span class="record-mini">平均配速</span><strong>${formatPace(averagePaceSeconds)} /${record.unit}</strong></div>
+                </div>
+                ${detailsHtml ? `<div class="record-detail-panel" aria-hidden="true"><div class="record-detail-body">${detailsHtml}</div></div>` : ""}
+              </div>
+            </div>
+          `;
+
+          card.querySelector("[data-edit]").addEventListener("click", () => editRecord(record.id));
+          card.querySelector("[data-delete]").addEventListener("click", () => deleteRecord(record.id));
+          card.querySelector("[data-toggle-details]")?.addEventListener("click", (event) => {
+            const panel = card.querySelector(".record-detail-panel");
+            if (!panel) return;
+            const isOpen = !panel.classList.contains("open");
+            panel.classList.toggle("open", isOpen);
+            panel.setAttribute("aria-hidden", String(!isOpen));
+            event.currentTarget.classList.toggle("active", isOpen);
+            event.currentTarget.setAttribute("aria-expanded", String(isOpen));
+            if (isOpen) window.setTimeout(() => ensureCardVisible(card), 290);
+          });
+          els.recordList.appendChild(card);
+        });
+      pendingNewRecordId = null;
+    }
+
+    function ensureCardVisible(card) {
+      const rect = card.getBoundingClientRect();
+      const margin = 18;
+      const overflowBottom = rect.bottom - (window.innerHeight - margin);
+      if (overflowBottom > 0) {
+        window.scrollBy({ top: overflowBottom, behavior: motionQuery.matches ? "auto" : "smooth" });
+      }
+    }
+
+    function getVisibleRecords() {
+      const query = String(prefState.search || "").trim().toLowerCase();
+      const range = rangeBounds(prefState.rangeFilter);
+      const visible = records.filter((record) => {
+        if (prefState.surfaceFilter !== "all" && record.surface !== prefState.surfaceFilter) return false;
+        if (range) {
+          const date = parseIsoDate(record.date);
+          if (!date || date < range.start || date > range.end) return false;
+        }
+        if (!query) return true;
+        const haystack = [
+          record.date,
+          record.title,
+          formatSurface(record.surface),
+          formatDistance(record.distance || 0),
+          record.unit,
+          record.kilometerPaces,
+          record.notes
+        ].filter(Boolean).join(" ").toLowerCase();
+        return haystack.includes(query);
+      });
+
+      return sortRecords(visible);
+    }
+
+    function sortRecords(list) {
+      const sorted = [...list];
+      const dateKey = (record) => `${record.date || ""} ${record.createdAt || ""}`;
+      sorted.sort((a, b) => {
+        if (prefState.sort === "date-asc") return dateKey(a).localeCompare(dateKey(b));
+        if (prefState.sort === "distance-desc") return toKm(b.distance || 0, b.unit) - toKm(a.distance || 0, a.unit);
+        if (prefState.sort === "pace-asc") {
+          const paceA = pacePerKm(a) || Infinity;
+          const paceB = pacePerKm(b) || Infinity;
+          return paceA - paceB;
+        }
+        return dateKey(b).localeCompare(dateKey(a));
+      });
+      return sorted;
+    }
+
+    function rangeBounds(range) {
+      const today = new Date();
+      const end = endOfDay(today);
+      if (range === "week") return { start: startOfWeek(today), end };
+      if (range === "month") return { start: new Date(today.getFullYear(), today.getMonth(), 1), end };
+      if (range === "year") return { start: new Date(today.getFullYear(), 0, 1), end };
+      return null;
+    }
+
+    function filterByCalendarDate(date) {
+      prefState.search = date;
+      prefState.rangeFilter = "all";
+      hydrateRecordControls();
+      savePrefs();
+      renderRecords();
+      showToast(`${date} 的紀錄`);
+    }
+
+    function statsForRange(start, end) {
+      return records.reduce((stats, record) => {
+        const date = parseIsoDate(record.date);
+        if (!date || date < start || date > end) return stats;
+        stats.km += toKm(record.distance || 0, record.unit);
+        stats.seconds += record.durationSeconds || 0;
+        stats.count += 1;
+        return stats;
+      }, { km: 0, seconds: 0, count: 0 });
+    }
+
+    function renderAnalysisCards() {
+      const month = monthDate(prefState.calendarMonth);
+      const monthSeries = dailyDistanceSeries(month);
+      const monthTitle = monthKey(month) === monthKey(new Date()) ? "本月跑量" : `${month.getMonth() + 1}月跑量`;
+      const streak = currentStreak();
+
+      return `
+        <section class="analysis-card wide" aria-label="本月跑量趨勢">
+          <div class="analysis-head">
+            <div>
+              <div class="analysis-title">${monthTitle}</div>
+              <div class="analysis-value">${formatKm(monthSeries.total)}</div>
+            </div>
+            <div class="analysis-sub">${monthSeries.runDays}/${monthSeries.days}</div>
+          </div>
+          ${sparkline(monthSeries.points, "trend-chart")}
+        </section>
+        <section class="analysis-card wide streak-card" aria-label="連續跑步">
+          <div class="analysis-head">
+            <div>
+              <div class="analysis-title">連續跑步</div>
+              <div class="analysis-value">${streak.current} 天</div>
+            </div>
+            <div class="analysis-sub">最長 ${streak.longest} 天</div>
+          </div>
+          <div class="analysis-title">最近一次</div>
+          <div class="metric-value">${streak.lastDate || "--"}</div>
+          <div class="analysis-sub">${streak.current ? "維持中" : "等待下一跑"}</div>
+        </section>
+      `;
+    }
+
+    function dailyDistanceSeries(month) {
+      const year = month.getFullYear();
+      const monthIndex = month.getMonth();
+      const days = new Date(year, monthIndex + 1, 0).getDate();
+      const values = Array.from({ length: days }, () => 0);
+      records.forEach((record) => {
+        const date = parseIsoDate(record.date);
+        if (!date || date.getFullYear() !== year || date.getMonth() !== monthIndex) return;
+        values[date.getDate() - 1] += toKm(record.distance || 0, record.unit);
+      });
+      return {
+        values,
+        points: values.map((value, index) => ({
+          value,
+          label: `${month.getMonth() + 1}/${index + 1}`,
+          detail: `${formatDistance(value)} km`,
+          interactive: value > 0
+        })),
+        total: values.reduce((sum, value) => sum + value, 0),
+        runDays: values.filter((value) => value > 0).length,
+        days
+      };
+    }
+
+    function currentStreak() {
+      const dates = [...new Set(records.map((record) => record.date).filter(Boolean))].sort();
+      if (!dates.length) return { current: 0, longest: 0, lastDate: "" };
+
+      let longest = 1;
+      let run = 1;
+      for (let index = 1; index < dates.length; index += 1) {
+        const previous = parseIsoDate(dates[index - 1]);
+        const current = parseIsoDate(dates[index]);
+        const diff = (current - previous) / 86400000;
+        run = diff === 1 ? run + 1 : 1;
+        longest = Math.max(longest, run);
+      }
+
+      let currentStreakDays = 1;
+      for (let index = dates.length - 1; index > 0; index -= 1) {
+        const current = parseIsoDate(dates[index]);
+        const previous = parseIsoDate(dates[index - 1]);
+        if ((current - previous) / 86400000 !== 1) break;
+        currentStreakDays += 1;
+      }
+
+      const today = parseIsoDate(todayIso());
+      const last = parseIsoDate(dates.at(-1));
+      const daysSinceLast = Math.round((today - last) / 86400000);
+      if (daysSinceLast > 1) currentStreakDays = 0;
+      return { current: currentStreakDays, longest, lastDate: dates.at(-1) };
+    }
+
+    function averageRunStats() {
+      if (!records.length) return { km: 0, seconds: 0, count: 0 };
+      const totals = records.reduce((stats, record) => {
+        stats.km += toKm(record.distance || 0, record.unit);
+        stats.seconds += record.durationSeconds || 0;
+        return stats;
+      }, { km: 0, seconds: 0 });
+      return {
+        km: totals.km / records.length,
+        seconds: totals.seconds / records.length,
+        count: records.length
+      };
+    }
+
+    function volumeSub(stats) {
+      return `${stats.count} 次 · ${formatDuration(stats.seconds)}`;
+    }
+
+    function calendarRunStyle(km, maxKm) {
+      const ratio = maxKm > 0 ? Math.max(0, Math.min(1, km / maxKm)) : 0;
+      const strength = Math.sqrt(ratio);
+      const hue = 46 - strength * 34;
+      const backgroundLight = 96 - strength * 20;
+      const borderLight = 82 - strength * 24;
+      const textLight = 36 - strength * 10;
+      return [
+        `--run-bg: hsl(${hue.toFixed(1)} 96% ${backgroundLight.toFixed(1)}%)`,
+        `--run-border: hsl(${hue.toFixed(1)} 92% ${borderLight.toFixed(1)}%)`,
+        `--run-distance: hsl(${hue.toFixed(1)} 90% ${textLight.toFixed(1)}%)`
+      ].join(";");
+    }
+
+    function sparkline(values, className) {
+      const data = values.map((entry, index) => {
+        if (typeof entry === "object" && entry !== null) {
+          const value = Number(entry.value) || 0;
+          return {
+            value,
+            label: entry.label || `第 ${index + 1} 點`,
+            detail: entry.detail || formatDistance(value),
+            interactive: Boolean(entry.interactive)
+          };
+        }
+        const value = Number(entry) || 0;
+        return { value, label: `第 ${index + 1} 點`, detail: formatDistance(value), interactive: value > 0 };
+      });
+      const clean = data.map((entry) => entry.value);
+      if (!clean.some((value) => value > 0)) {
+        return `
+          <div class="chart-wrap" data-chart>
+            <svg class="${className}" viewBox="0 0 220 88" preserveAspectRatio="none" aria-hidden="true"><path class="chart-axis" d="M4 78H216"/></svg>
+            <div class="chart-tooltip" data-chart-tooltip hidden></div>
+          </div>
+        `;
+      }
+      const width = 220;
+      const height = 88;
+      const paddingX = 4;
+      const paddingTop = 8;
+      const paddingBottom = 10;
+      const max = Math.max(...clean);
+      const span = Math.max(1, max);
+      const points = clean.map((value, index) => {
+        const x = clean.length === 1 ? width / 2 : paddingX + (index / (clean.length - 1)) * (width - paddingX * 2);
+        const y = height - paddingBottom - (value / span) * (height - paddingTop - paddingBottom);
+        return [Number(x.toFixed(2)), Number(y.toFixed(2))];
+      });
+      const line = points.map(([x, y], index) => `${index ? "L" : "M"}${x} ${y}`).join(" ");
+      const area = `${line} L${width - paddingX} ${height - paddingBottom} L${paddingX} ${height - paddingBottom} Z`;
+      const lastInteractiveIndex = data.reduce((last, item, index) => item.interactive ? index : last, -1);
+      const pointNodes = points.map(([x, y], index) => {
+        const item = data[index];
+        if (!item.interactive) return "";
+        const left = (x / width) * 100;
+        const top = (y / height) * 100;
+        const label = escapeHtml(item.label);
+        const detail = escapeHtml(item.detail);
+        const pointClass = index === lastInteractiveIndex ? "chart-point last-point" : "chart-point";
+        return `<circle class="${pointClass}" cx="${x}" cy="${y}" r="2.4" tabindex="0" data-left="${left.toFixed(2)}" data-top="${top.toFixed(2)}" data-label="${label}" data-detail="${detail}" aria-label="${label} ${detail}"></circle>`;
+      }).join("");
+      return `
+        <div class="chart-wrap" data-chart>
+          <svg class="${className}" viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" aria-label="跑量折線圖">
+            <path class="chart-axis" d="M${paddingX} ${height - paddingBottom}H${width - paddingX}"/>
+            <path class="chart-area" d="${area}"/>
+            <path class="chart-line" pathLength="1" d="${line}"/>
+            ${pointNodes}
+          </svg>
+          <div class="chart-tooltip" data-chart-tooltip hidden></div>
+        </div>
+      `;
+    }
+
+    function bindChartTooltips() {
+      els.analysisGrid.querySelectorAll("[data-chart]").forEach((chart) => {
+        const tooltip = chart.querySelector("[data-chart-tooltip]");
+        const points = [...chart.querySelectorAll(".chart-point")];
+        const show = (point) => {
+          tooltip.innerHTML = `<strong>${point.dataset.label}</strong><span>${point.dataset.detail}</span>`;
+          tooltip.style.left = `${point.dataset.left}%`;
+          tooltip.style.top = `${point.dataset.top}%`;
+          tooltip.hidden = false;
+        };
+        const hide = () => {
+          tooltip.hidden = true;
+          tooltip.classList.remove("pinned");
+        };
+
+        chart.querySelectorAll(".chart-point").forEach((point) => {
+          point.addEventListener("pointerenter", () => show(point));
+          point.addEventListener("focus", () => show(point));
+          point.addEventListener("click", (event) => {
+            event.stopPropagation();
+            show(point);
+            tooltip.classList.add("pinned");
+          });
+        });
+        chart.querySelector("svg")?.addEventListener("click", (event) => {
+          if (event.target.classList.contains("chart-point") || !points.length) return;
+          const rect = event.currentTarget.getBoundingClientRect();
+          const left = ((event.clientX - rect.left) / rect.width) * 100;
+          const nearest = points.reduce((best, point) => {
+            const distance = Math.abs(Number(point.dataset.left) - left);
+            return !best || distance < best.distance ? { point, distance } : best;
+          }, null)?.point;
+          if (nearest) {
+            show(nearest);
+            tooltip.classList.add("pinned");
+          }
+        });
+        chart.addEventListener("pointerleave", () => {
+          if (!tooltip.classList.contains("pinned")) tooltip.hidden = true;
+        });
+        chart.addEventListener("click", (event) => {
+          if (!event.target.classList.contains("chart-point")) hide();
+        });
+      });
+    }
+
+    function isRecentRecord(record) {
+      if (!record?.date) return false;
+      const date = parseIsoDate(record.date);
+      if (!date) return false;
+      return (endOfDay(new Date()) - date) / 86400000 <= 7;
+    }
+
+    function formatKm(km) {
+      return `${km > 0 ? formatDistance(km) : "0"} km`;
+    }
+
+    function pacePerKm(record) {
+      const pace = getAveragePaceSeconds(record);
+      if (!pace) return 0;
+      return record.unit === "mi" ? pace / KM_PER_MILE : pace;
+    }
+
+    function bestRecord(scoreFn, direction) {
+      let best = null;
+      let bestScore = direction === "max" ? -Infinity : Infinity;
+      records.forEach((record) => {
+        const score = scoreFn(record);
+        if (!Number.isFinite(score)) return;
+        if (direction === "max" ? score > bestScore : score < bestScore) {
+          best = record;
+          bestScore = score;
+        }
+      });
+      return best;
+    }
+
+    function bestDistanceRecord(targetKm) {
+      const tolerance = Math.max(0.15, targetKm * 0.03);
+      return bestRecord((record) => {
+        const distanceKm = toKm(record.distance || 0, record.unit);
+        if (Math.abs(distanceKm - targetKm) > tolerance) return Infinity;
+        return record.durationSeconds || Infinity;
+      }, "min");
+    }
+
+    function toKm(distance, unit) {
+      return unit === "mi" ? distance * KM_PER_MILE : distance;
+    }
+
+    function getAveragePaceSeconds(record) {
+      return record.averagePaceSeconds || record.paceSeconds || 0;
+    }
+
+    function getAverageHeartRate(record) {
+      return record.avgHeartRate || record.heartRate || "";
+    }
+
+    function getMaxHeartRate(record) {
+      return record.maxHeartRate || record.peakHeartRate || "";
+    }
+
+    function formatSurface(surface) {
+      if (surface === "indoor") return "室內";
+      if (surface === "outdoor") return "室外";
+      return "";
+    }
+
+    function formatRecordMeta(record) {
+      const items = [record.date, formatSurface(record.surface)].filter(Boolean);
+      return items.map(escapeHtml).join(" · ");
+    }
+
+    function renderRecordDetails(record, avgHeartRate, maxHeartRate) {
+      const heartHtml = renderHeartDetails(avgHeartRate, maxHeartRate, record.heartRateZones);
+      const metricHtml = renderDetailMetrics(record);
+      const weatherHtml = renderWeatherDetails(record.weather);
+      const notesHtml = record.notes ? `<div class="record-notes">${escapeHtml(record.notes)}</div>` : "";
+      const body = [heartHtml, metricHtml, weatherHtml, notesHtml].filter(Boolean).join("");
+      return body;
+    }
+
+    function renderDetailMetrics(record) {
+      const items = [
+        record.calories ? ["calories", "卡路里", `${record.calories} 卡`] : null,
+        record.cadence ? ["cadence", "步頻", record.cadence] : null
+      ].filter(Boolean);
+      if (!items.length) return "";
+      return `
+        <section class="detail-metrics" aria-label="其他數據">
+          ${items.map(([type, label, value]) => `
+            <div class="detail-metric">
+              ${detailIcon(type)}
+              <span>${label}<strong>${escapeHtml(value)}</strong></span>
+            </div>
+          `).join("")}
+        </section>
+      `;
+    }
+
+    function detailIcon(type) {
+      const icons = {
+        calories: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M13.5 3.5c.6 2.9-.6 4.4-2 5.7-1.6 1.5-3 2.8-3 5.3a4.5 4.5 0 0 0 9 0c0-1.5-.7-2.8-1.9-4.2-.3 1.4-1.1 2.2-2.1 2.7.4-2.3-.3-4.4-2-6.2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+        cadence: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M7 6h.01M17 6h.01M7 18h.01M17 18h.01" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><path d="M8 7c2.4 1.7 5.6 1.7 8 0M8 17c2.4-1.7 5.6-1.7 8 0" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>`
+      };
+      return `<span class="detail-icon">${icons[type] || ""}</span>`;
+    }
+
+    function renderHeartDetails(avgHeartRate, maxHeartRate, zones) {
+      const zoneValues = normalizedZones(zones);
+      const hasZones = zoneValues.some((value) => value !== "" && value != null);
+      const heartValues = [
+        avgHeartRate ? ["平均心率", avgHeartRate, "bpm"] : null,
+        maxHeartRate ? ["最大心率", maxHeartRate, "bpm"] : null
+      ].filter(Boolean);
+      if (!heartValues.length && !hasZones) return "";
+
+      const valuesHtml = heartValues.length
+        ? `<div class="heart-values">${heartValues.map(([label, value, unit]) => `
+            <div class="heart-value">
+              <span class="record-mini">${label}</span>
+              <strong><span class="heart-number">${escapeHtml(value)}</span><span class="heart-unit">${escapeHtml(unit)}</span></strong>
+            </div>
+          `).join("")}</div>`
+        : "";
+      const barsHtml = hasZones ? renderZoneBars(zoneValues) : "";
+      return `<section class="heart-panel" aria-label="心率">${valuesHtml}${barsHtml}</section>`;
+    }
+
+    function renderZoneBars(zones) {
+      const colors = ["#4e9fca", "#42a66b", "#e1a739", "#df7646", "#cc4e5c"];
+      return `
+        <div class="zone-bars" aria-label="心率區間占比">
+          ${zones.map((value, index) => {
+            const hasValue = value !== "" && value != null;
+            const percent = hasValue ? Math.min(100, Math.max(0, number(value))) : 0;
+            const label = hasValue ? `${formatCompactNumber(percent)}%` : "--";
+            return `
+              <div class="zone-bar-item">
+                <div class="zone-bar-track" aria-hidden="true">
+                  <div class="zone-bar-fill" style="height: ${percent}%; background: ${colors[index]};"></div>
+                </div>
+                <span>Z${index + 1}</span>
+                <span>${label}</span>
+              </div>
+            `;
+          }).join("")}
+        </div>
+      `;
+    }
+
+    function normalizedZones(zones) {
+      const values = Array.isArray(zones) ? zones : [];
+      return [0, 1, 2, 3, 4].map((index) => values[index] ?? "");
+    }
+
+    function renderWeatherDetails(weather) {
+      if (!weather) return "";
+      const items = [
+        weather.temperature !== "" && weather.temperature != null ? ["temperature", "氣溫", `${weather.temperature}°C`] : null,
+        weather.humidity !== "" && weather.humidity != null ? ["humidity", "濕度", `${weather.humidity}%`] : null,
+        weather.windSpeed !== "" && weather.windSpeed != null ? ["wind", "風速", weather.windSpeed] : null,
+        weather.windDirection ? ["direction", "風向", weather.windDirection] : null
+      ].filter(Boolean);
+      if (!items.length) return "";
+      return `
+        <section class="weather-row" aria-label="天氣">
+          ${items.map(([type, label, value]) => `
+            <div class="weather-item">
+              ${weatherIcon(type)}
+              <span>${label}<strong>${escapeHtml(value)}</strong></span>
+            </div>
+          `).join("")}
+        </section>
+      `;
+    }
+
+    function weatherIcon(type) {
+      const icons = {
+        temperature: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M14 14.8V5a3 3 0 0 0-6 0v9.8a5 5 0 1 0 6 0Z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M11 15V8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>`,
+        humidity: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3s6 6.2 6 11a6 6 0 0 1-12 0c0-4.8 6-11 6-11Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M9.5 14.5A2.7 2.7 0 0 0 12.2 17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>`,
+        wind: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 8h10a3 3 0 1 0-3-3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M4 13h14a3 3 0 1 1-3 3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M4 18h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>`,
+        direction: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3 6.5 20l5.5-3 5.5 3L12 3Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>`
+      };
+      return `<span class="weather-icon">${icons[type] || ""}</span>`;
+    }
+
+    function formatCompactNumber(value) {
+      if (!Number.isFinite(value)) return "";
+      return Number(value.toFixed(2)).toString();
+    }
+
+    function editRecord(id) {
+      const record = records.find((item) => item.id === id);
+      if (!record) return;
+      editingRecordId = id;
+      els.recordFormTitle.textContent = "編輯紀錄";
+      els.saveRecordButton.lastChild.textContent = " 更新紀錄";
+      els.recordDate.value = record.date;
+      els.recordTitle.value = record.title;
+      els.recordSurface.value = record.surface || "outdoor";
+      els.recordDistance.value = formatDistanceInput(record.distance);
+      els.recordUnit.value = record.unit;
+      els.recordDuration.value = formatDuration(record.durationSeconds);
+      els.recordPace.value = formatPace(getAveragePaceSeconds(record));
+      els.recordKilometerPaces.value = record.kilometerPaces || "";
+      els.recordCalories.value = record.calories || "";
+      els.recordHeartRate.value = getAverageHeartRate(record) || "";
+      els.recordMaxHeartRate.value = getMaxHeartRate(record) || "";
+      els.recordCadence.value = record.cadence || "";
+      [els.recordZone1, els.recordZone2, els.recordZone3, els.recordZone4, els.recordZone5].forEach((input, index) => {
+        input.value = record.heartRateZones?.[index] || "";
+      });
+      els.recordTemperature.value = record.weather?.temperature ?? "";
+      els.recordHumidity.value = record.weather?.humidity ?? "";
+      els.recordWindSpeed.value = record.weather?.windSpeed ?? "";
+      els.recordWindDirection.value = record.weather?.windDirection || "";
+      els.recordNotes.value = record.notes || "";
+      showView("records");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    function deleteRecord(id) {
+      const index = records.findIndex((item) => item.id === id);
+      if (index < 0) return;
+      const [removed] = records.splice(index, 1);
+      pendingUndoDelete = { record: removed, index };
+      if (!saveRecords()) {
+        records.splice(index, 0, removed);
+        pendingUndoDelete = null;
+        return;
+      }
+      if (editingRecordId === id) resetRecordForm();
+      showToast("已刪除", {
+        actionLabel: "復原",
+        duration: 5200,
+        onAction: restoreDeletedRecord
+      });
+    }
+
+    function restoreDeletedRecord() {
+      if (!pendingUndoDelete) return;
+      const { record, index } = pendingUndoDelete;
+      pendingUndoDelete = null;
+      if (records.some((item) => item.id === record.id)) return;
+      const insertAt = Math.max(0, Math.min(index, records.length));
+      records.splice(insertAt, 0, record);
+      if (saveRecords()) showToast("已復原");
+    }
+
+    function exportBackup() {
+      const payload = {
+        app: "pace-run-records",
+        version: 3,
+        exportedAt: new Date().toISOString(),
+        records
+      };
+      downloadText(
+        `running-records-backup-${todayIso()}.json`,
+        JSON.stringify(payload, null, 2),
+        "application/json;charset=utf-8"
+      );
+      showToast("已下載備份");
+    }
+
+    async function importBackup(event) {
+      const file = event.target.files?.[0];
+      event.target.value = "";
+      if (!file) return;
+
+      try {
+        const payload = JSON.parse(await file.text());
+        const incoming = Array.isArray(payload) ? payload : payload.records;
+        if (!Array.isArray(incoming)) {
+          showToast("備份檔格式不對");
+          return;
+        }
+
+        const merged = new Map(records.map((record) => [record.id || makeId(), record]));
+        incoming.forEach((record) => {
+          if (!record || typeof record !== "object") return;
+          const id = record.id || makeId();
+          merged.set(id, { ...record, id });
+        });
+        records = [...merged.values()];
+        saveRecords();
+        showToast(`已匯入 ${incoming.length} 筆`);
+      } catch {
+        showToast("匯入失敗");
+      }
+    }
+
+    function exportCsv() {
+      if (!records.length) {
+        showToast("沒有紀錄可匯出");
+        return;
+      }
+      const header = ["日期", "名稱", "室內/室外", "距離", "單位", "時間", "平均配速", "每公里配速", "卡路里", "平均心率", "最大心率", "步頻", "Z1%", "Z2%", "Z3%", "Z4%", "Z5%", "氣溫", "濕度", "風速", "風向", "備註"];
+      const rows = records.map((record) => [
+        record.date,
+        record.title,
+        formatSurface(record.surface),
+        formatDistance(record.distance),
+        record.unit,
+        formatDuration(record.durationSeconds),
+        formatPace(getAveragePaceSeconds(record)),
+        record.kilometerPaces || "",
+        record.calories || "",
+        getAverageHeartRate(record) || "",
+        getMaxHeartRate(record) || "",
+        record.cadence || "",
+        ...normalizedZones(record.heartRateZones),
+        record.weather?.temperature ?? "",
+        record.weather?.humidity ?? "",
+        record.weather?.windSpeed ?? "",
+        record.weather?.windDirection || "",
+        record.notes || ""
+      ]);
+      const csv = [header, ...rows]
+        .map((row) => row.map((cell) => `"${String(cell).replaceAll('"', '""')}"`).join(","))
+        .join("\n");
+      downloadText(`running-records-${todayIso()}.csv`, `\ufeff${csv}`, "text/csv;charset=utf-8");
+      showToast("已匯出 CSV");
+    }
+
+    function downloadText(filename, text, type) {
+      const blob = new Blob([text], { type });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename;
+      link.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function makeId() {
+      if (window.crypto?.randomUUID) return window.crypto.randomUUID();
+      return `run-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    }
+
+    function showToast(message, options = {}) {
+      const { actionLabel = "", onAction = null, duration = actionLabel ? 5200 : 1300 } = options;
+      els.toast.replaceChildren();
+      const text = document.createElement("span");
+      text.className = "toast-message";
+      text.textContent = message;
+      els.toast.appendChild(text);
+
+      if (actionLabel && typeof onAction === "function") {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "toast-action";
+        button.textContent = actionLabel;
+        button.addEventListener("click", (event) => {
+          event.stopPropagation();
+          window.clearTimeout(showToast.timer);
+          els.toast.classList.remove("show");
+          onAction();
+        });
+        els.toast.appendChild(button);
+      }
+
+      els.toast.classList.add("show");
+      window.clearTimeout(showToast.timer);
+      showToast.timer = window.setTimeout(() => {
+        els.toast.classList.remove("show");
+      }, duration);
+    }
+  </script>
+</body>
+</html>
